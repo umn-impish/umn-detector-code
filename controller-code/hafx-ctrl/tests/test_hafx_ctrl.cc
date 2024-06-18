@@ -107,45 +107,8 @@ TEST(HafxCtrl, HistogramSlices) {
 TEST(HafxCtrl, DebugCollections) {
     auto ctrl = get_test_hafx_ctrl();
 
-    // Open a socket to receive the saved data
-    int sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
-    struct sockaddr_in addr{};
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(base_port + 2);
-    inet_aton("0.0.0.0", &addr.sin_addr);
-
-    // Bind it to the port and any address
-    bind(sock_fd, (sockaddr*)&addr, sizeof(addr));
-
-    // Test reading data
-    ctrl->read_save_debug<SipmUsb::ArmStatus>();
-    constexpr size_t BUF_SIZE = 1024;
-    std::vector<uint8_t> buffer(BUF_SIZE);
-    recv(sock_fd, buffer.data(), BUF_SIZE, 0);
-    std::string s{buffer.begin(), buffer.end()};
-    ASSERT_TRUE(s.size());
-
-    // Initial bytes are the type
-    DetectorMessages::HafxDebug::Type debug_type;
-    memcpy(&debug_type, s.data(), sizeof(debug_type));
-
-    // Remaining bytes are the debug data
-    auto debug_data = std::span<char>(s).subspan(sizeof(debug_type));
-
-    // could repeat for other stuff... eh
-    if (debug_type == DetectorMessages::HafxDebug::Type::ArmStatus) {
-        std::string bytes_(debug_data.data(), debug_data.size());
-        SipmUsb::ArmStatus::Registers reg{0};
-        std::memcpy(reg.data(), bytes_.data(), bytes_.size());
-        for (size_t i = 0; i < reg.size(); ++i) {
-            std::cout << i << " -> " << reg[i] << std::endl;
-        }
-    }
-    else {
-        std::cout << "got: " << static_cast<uint8_t>(debug_type) << std::endl;
-    }
-
     // All possible debugs
+    ctrl->read_save_debug<SipmUsb::ArmStatus>();
     ctrl->read_save_debug<SipmUsb::FpgaListMode>();
     ctrl->read_save_debug<SipmUsb::FpgaHistogram>();
     ctrl->read_save_debug<SipmUsb::FpgaWeights>();
@@ -153,8 +116,6 @@ TEST(HafxCtrl, DebugCollections) {
     ctrl->read_save_debug<SipmUsb::FpgaCtrl>();
     ctrl->read_save_debug<SipmUsb::ArmStatus>();
     ctrl->read_save_debug<SipmUsb::ArmCal>();
-
-    close(sock_fd);
 }
 
 int main(int argc, char *argv[]) {
