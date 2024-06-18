@@ -10,3 +10,5 @@ target_include_directories(raii-gpio
 target_link_libraries(raii-gpio
     PkgConfig::GPIOD
 )
+
+add_subdirectory(tests)
