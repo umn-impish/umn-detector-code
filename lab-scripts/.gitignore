@@ -1,0 +1,5 @@
+data
+downlink
+*.gz
+*.swp
+*.zip

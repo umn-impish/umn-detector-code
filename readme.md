@@ -1,24 +1,16 @@
-# Detector flight code for use on the IMPISH piggyback
+# IMPRESS / EXACT / IMPISH : flight and some ground code
+## This repo contains flight and some ground code for decoding data from IMPRESS, EXACT, and IMPISH missions.
 
-This code is taken straight from IMPRESS/EXACT flight code and
-controls the Bridgeport SiPM-3000 boards and Amptek X-123 DP5 communication.
+### Contents
 
-It is just the "controller" code which talks to the hardware and pipes the data around.
+#### `flight-controller`
+- Contains code for interfacing with the detector hardware
+- Has a utility called `udp_capture` which pipes data to files and other UDP sockets.
 
-## How to build/install
+#### `python`
+- In-flight utilities for rebinning science data along time or energy axes
+- Ground code for decoding binary files into JSON
 
-Clone the repository;
-    then, from this directory, do:
-```bash
-mkdir build
-cd build
-cmake ..
-make -jN
-```
-**Replace `N` with the number of threads you want to use for building.**
-
-You might need to install some libraries:
-### packages from apt
-```sh
-sudo apt install libusb-1.0-0-dev gpiod libgpiod-dev libboost-all-dev libgtest-dev libsystemd-dev
-```
+#### `lab-scripts`
+- Scripts that can be used in-lab which runs the detector controller code
+    and saves files via udp_capture.
