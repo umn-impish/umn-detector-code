@@ -1,5 +1,5 @@
 # Scripts for taking data with detector flight code
-**NB: assumes that `make install` has been run on the [`detector-controller`](https://github.umn.edu/UMN-CubeSat-Team/detector-impress-exact/tree/main/controller)!
+**NB: assumes that `make install` has been run on the [`detector-controller`](https://github.com/umn-impish/umn-detector-code/tree/main/flight-controller)!
 See the readme in `flight/controller` for how to install the required programs.
 Only works on Unix/Linux computers**
 
@@ -15,6 +15,7 @@ Only works on Unix/Linux computers**
 - [How to read in data in general](#how-do-i-read-the-data-in-afterwards)
 
 ## INSTRUCTIONS
+0. Change directory into the `bash-scripts` subdirectory
 1. Run `bash init.bash`. Launches the programs needed to take and save data.
 2. Run the script you wanna use with proper arguments, for example:
 - `./hafx_histogram.bash [acquisition time] [detector identifier]`
