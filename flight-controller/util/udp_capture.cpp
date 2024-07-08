@@ -104,7 +104,7 @@ void listen_write_loop(const ProgramArgs &args)
             if (errno == EWOULDBLOCK || errno == EAGAIN) {
                 // On timeout, close any open file
                 close_file = out.file.is_open();
-            } else {
+            } else if (errno != EINTR) {
                 throw std::runtime_error{
                     std::string{"socket recv died: "} + strerror(errno)
                 };
