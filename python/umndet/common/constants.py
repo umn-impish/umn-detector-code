@@ -8,7 +8,7 @@ DATE_FMT = '%Y-%j-%H-%M-%S'
 # June 26, 2024 - testing revision
 FIRST_REVISION = dt.datetime.strptime('2024-178', '%Y-%j')
 FIRST_NUM_TIMES_REBIN = 128
-FIRST_NEW_ENERGY_EDGES = [0, 10, 20, 30, 40, 60, 90, 124]
+FIRST_NEW_ENERGY_EDGES = (0, 10, 20, 30, 40, 60, 90, 124)
 
 # July 7, 2024 - testing revision
 _num_adc = 2048

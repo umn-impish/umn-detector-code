@@ -1,7 +1,7 @@
 import ctypes
 import struct
 import umndet.common.impress_exact_structs as ies
-from typing import Any, Callable, IO
+from typing import Any, Callable, IO, Iterable
 
 
 def generic_read_binary(
@@ -71,3 +71,16 @@ def read_hafx_debug(fn: str, open_func: Callable) -> list[ies.HafxDebug]:
         bytes_ = f.read(sz)
         return ies.HafxDebug(type_, bytes_)
     return generic_read_binary(fn, open_func, read_elt)
+
+
+def reverse_bridgeport_mapping(adc_mapping: Iterable[int]) -> list[int]:
+    '''
+    Take the list of 2048 numbers which map 2048 "normal" ADC
+    bins down to the IMPRESS 123 bins and undo that mapping.
+    '''
+    reversed_bins = list(
+        2 * adc_mapping.index(i)
+        for i in range(5, 128)
+    )
+    reversed_bins.append(4097)
+    return reversed_bins
