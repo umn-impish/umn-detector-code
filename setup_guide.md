@@ -29,7 +29,7 @@ git clone https://github.com/umn-impish/umn-detector-code.git
 
 Cd into the flight code directory and compile the code:
 ```
-cd ~/umn-detector-code/flight-controller
+cd /umn-detector-code/flight-controller
 mkdir build && cd build
 cmake ..
 make -j4
@@ -37,7 +37,7 @@ make -j4
 
 You will also have to move the usb.rules file into /etc/udev/rules.d/. This will give all usb devices read write access to the pi.
 ```
-sudo mv ~/umn-detector-code/flight-controller/install/usb.rules /etc/udev/rules.d/
+sudo mv ~umn-detector-code/flight-controller/install/usb.rules /etc/udev/rules.d/
 ```
 
 Now that the code is compiled you will have to get the Serial numbers of the bridgeport boards being used:
@@ -46,7 +46,7 @@ Now that the code is compiled you will have to get the Serial numbers of the bri
 
 Once you have the serial numbers you will have to edit the 'launch_detector.bash' script which starts up the detector service. Open it with nano:
 ```
-nano ~/umn-detector-code/lab-scripts/launch-detector.bash
+nano /umn-detector-code/lab-scripts/launch-detector.bash
 ```
 From there you will see these lines:
 ```
@@ -76,16 +76,18 @@ PPS is requited for nominal science mode. In order to set it up...
 
 ## Data Analysis
 
-The data is given in the form of gzip binary files (i.e. filename.bin.gz). The will also have some prefix (hafx_histgram, hafx_debug, ...) and a unix timestamp suffix, for example: 'hafx-debug-c1_2024-170-20-03-20_0.bin.gz'. The python decoders are used to decode into json or plot from .bin.gz format. To decode into json, run the json_decoders.py script in the /python/ subdirectory. You will have to install the python package William made.
+The data is given in the form of gzip binary files (i.e. filename.bin.gz). The will also have some prefix (hafx_histgram, hafx_debug, ...) and a unix timestamp suffix, for example: 'hafx-debug-c1_2024-170-20-03-20_0.bin.gz'. The python decoders are used to decode into json or plot from .bin.gz format. To decode into json, you will have to install the python package William made.
 ```
-cd ~/umn-detector-code/python
+cd /umn-detector-code/python
 pip install -e . --break-system-packages
 ```
-Then you can use it like a normal python script:
+Then you can use it like a script from the command line. There are decode options for decoding health, hafx science ("time-slice"), hafx debug, and x123 science data. You can enter multiple files for decoding into one json. Example usage:
 ```
-python3 json_decoders.py *input_file_name(s).bin.gz* *output_file_name.json*
+decode-impress-health health_file1.bin.gz health_file2.bin.gz ... health_fileN.bin.gz output_fn.json
+decode-impress-hafx ...                       
+decode-hafx-debug-hist ...
+decode-x123-science ...
 ```
-You can enter multiple .bin.gz files at once to decode into one .json file, for example:
-```
-python3 json_decoders.py histogram1.bin.gz histogram2.bin.gz histograms.json
-```
+### Plotting
+
+... (from .bin.gz or from .json? or both?)
