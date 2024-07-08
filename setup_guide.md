@@ -35,14 +35,7 @@ cmake ..
 make -j4
 ```
 
-You will also have to move the usb.rules file into /etc/udev/rules.d/. This will give all usb devices read write access to the pi.
-```
-sudo mv ~umn-detector-code/flight-controller/install/usb.rules /etc/udev/rules.d/
-```
-
-Now that the code is compiled you will have to get the Serial numbers of the bridgeport boards being used:
-
-*words here*
+Now that the code is compiled you will have to get the Serial numbers of the bridgeport boards being used. Plug in the boards you want to use to a computer with the run_mds.cmd from the bridgeport software. Then run 'run_mds.cmd' and in the commnd prompt pop up it will list 'Attached MCA' and then a hex string in brackets. This string is the serial number of the bridgeport board. Write them down somewhere safe.
 
 Once you have the serial numbers you will have to edit the 'launch_detector.bash' script which starts up the detector service. Open it with nano:
 ```
@@ -64,7 +57,7 @@ Run init.bash via
 ```
 ./init.bash
 ```
-Once you see a blank terminal line hit enter once. This scripts starts the detector service and udp_capture processes for the hafx channels and x123. From there you can run the scripts like hafx_histogram.bash and x123_histogram.basg, the usage for which are in the github for /lab-scripts/. The histogram data will be put into the lab-scripts/downlink folder upon completion. From there you can take it off the pi via scp or work with it on the pi.
+Once you see a blank terminal line hit enter once. This scripts starts the detector service and udp_capture processes for the hafx channels and x123. From there you can run the scripts like hafx_histogram.bash and x123_histogram.bash, the usage for which are in the github for /lab-scripts/. The histogram data will be put into the lab-scripts/downlink folder upon completion. From there you can take it off the pi via scp or work with it on the pi.
 
 ...
 
