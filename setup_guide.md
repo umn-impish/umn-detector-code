@@ -51,6 +51,13 @@ x1_serial_number="none"
 The given serial number is the serial number of the board used at UMN (as of 7/24). Change these entries to be the serial numbers of the boards that you got from above. If you are using one board just change the c1 serial number and leave the rest.
 Save it via ctrl-x, typing y, and hitting enter once.
 
+Lastly, you will have to change some usb read/write rules. Not required, but this will make it so only the user signed in can work with the dp5 and sipm3k boards. Just enter these lines:
+```
+sudo addgroup plugdev
+sudo adduser "$(whoami)" plugdev
+udevadm control --reload-rules
+```
+
 ## Usage
 
 Run init.bash via
@@ -65,7 +72,7 @@ Once you are done with the detector quit.bash will stop the detector service and
 
 ## PPS Setup
 
-PPS is requited for nominal science mode. In order to set it up...
+PPS is required for nominal science mode. In order to set it up...
 
 ## Data Analysis
 
@@ -83,4 +90,4 @@ decode-x123-science ...
 ```
 ### Plotting
 
-... (from .bin.gz or from .json? or both?)
+There is an example or analyzing nominal data somewhere in this repo. ...
