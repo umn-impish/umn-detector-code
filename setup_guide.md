@@ -1,0 +1,93 @@
+# How to install and run IMPRESS / EXACT / IMPISH flight code
+
+This guide will show you how to setup the flight code on a fresh pi.
+
+## Table of Contents
+1. [Installation](#installation)
+2. [Usage](#usage)
+3. [PPS Setup](#pps-setup)
+4. [Data Analysis](#data-Analysis)
+
+
+## Installation
+
+First install necessary libraries:
+```
+sudo apt install libusb-1.0-0-dev gpiod libgpiod-dev libboost-all-dev libgtest-dev libsystemd-dev
+```
+
+Install git and python/pip:
+```
+sudo apt install git
+sudo apt install python3
+```
+
+Clone the flight code repository:
+```
+git clone https://github.com/umn-impish/umn-detector-code.git
+```
+
+Cd into the flight code directory and compile the code:
+```
+cd /umn-detector-code/flight-controller
+mkdir build && cd build
+cmake ..
+make -j4
+```
+
+Now that the code is compiled you will have to get the Serial numbers of the bridgeport boards being used. Plug in the boards you want to use to a computer with the run_mds.cmd from the bridgeport software. Then run 'run_mds.cmd' and in the commnd prompt pop up it will list 'Attached MCA' and then a hex string in brackets. This string is the serial number of the bridgeport board. Write them down somewhere safe.
+
+Once you have the serial numbers you will have to edit the 'launch_detector.bash' script which starts up the detector service. Open it with nano:
+```
+nano /umn-detector-code/lab-scripts/launch-detector.bash
+```
+From there you will see these lines:
+```
+c1_serial_number="55FD9A8F4A344E5120202041131E05FF"
+m1_serial_number="none"
+m5_serial_number="none"
+x1_serial_number="none"
+```
+The given serial number is the serial number of the board used at UMN (as of 7/24). Change these entries to be the serial numbers of the boards that you got from above. If you are using one board just change the c1 serial number and leave the rest.
+Save it via ctrl-x, typing y, and hitting enter once.
+
+Lastly, you will have to change some usb read/write rules. Not required, but this will make it so only the user signed in can work with the dp5 and sipm3k boards. Just enter these lines:
+```
+sudo addgroup plugdev
+sudo adduser "$(whoami)" plugdev
+udevadm control --reload-rules
+```
+
+## Usage
+
+Run init.bash via
+```
+./init.bash
+```
+Once you see a blank terminal line hit enter once. This scripts starts the detector service and udp_capture processes for the hafx channels and x123. From there you can run the scripts like hafx_histogram.bash and x123_histogram.bash, the usage for which are in the github for /lab-scripts/. The histogram data will be put into the lab-scripts/downlink folder upon completion. From there you can take it off the pi via scp or work with it on the pi.
+
+...
+
+Once you are done with the detector quit.bash will stop the detector service and udp captures. You will see some lines printed out in the terminal, just hit enter.
+
+## PPS Setup
+
+PPS is required for nominal science mode. In order to set it up...
+
+## Data Analysis
+
+The data is given in the form of gzip binary files (i.e. filename.bin.gz). The will also have some prefix (hafx_histgram, hafx_debug, ...) and a unix timestamp suffix, for example: 'hafx-debug-c1_2024-170-20-03-20_0.bin.gz'. The python decoders are used to decode into json or plot from .bin.gz format. To decode into json, you will have to install the python package William made.
+```
+cd /umn-detector-code/python
+pip install -e . --break-system-packages
+```
+Then you can use it like a script from the command line. There are decode options for decoding health, hafx science ("time-slice"), hafx debug, and x123 science data. You can enter multiple files for decoding into one json. Example usage:
+```
+decode-impress-health health_file1.bin.gz health_file2.bin.gz ... health_fileN.bin.gz output_fn.json
+decode-impress-hafx ...                       
+decode-hafx-debug-hist ...
+decode-x123-science ...
+```
+### Plotting
+
+There is an example or analyzing nominal data somewhere in this repo. ...
