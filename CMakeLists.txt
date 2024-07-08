@@ -1,3 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
-#Incomplete, need to update names when getting product ID for DP5 and sipm3k boards
-install(FILES "usb.rules" DESTINATION /etc/udev/rules.d/ COMPONENT udev)
+cmake_minimum_required(VERSION 3.7...3.27)
+
+install(FILES "00-bridgeport.rules" DESTINATION /etc/udev/rules.d/ COMPONENT udev)
+install(FILES "01-amptek.rules" DESTINATION /etc/udev/rules.d/ COMPONENT udev)
