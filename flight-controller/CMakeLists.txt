@@ -5,5 +5,6 @@ project(impish-detector-controller)
 find_package(GTest REQUIRED)
 enable_testing()
 
+add_subdirectory(install)
 add_subdirectory(util)
 add_subdirectory(controller-code)
