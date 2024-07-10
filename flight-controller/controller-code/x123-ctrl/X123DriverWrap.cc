@@ -22,6 +22,7 @@ X123DriverWrap::~X123DriverWrap() { }
 
 void X123DriverWrap::reinit() {
     try {
+        cm = nullptr;
         cm = std::make_unique<X123Driver::UsbConnectionManager>();
     }
     catch (LibUsbCpp::UsbException const& e) {

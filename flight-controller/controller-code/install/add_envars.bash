@@ -12,5 +12,5 @@ source_str="source $out_path"
 if [[ !( $(cat "$HOME/.bashrc") =~ $source_str ) ]]; then
     echo $source_str >> "$HOME/.bashrc"
 else
-    echo "ports already installed"
+    echo "updated port"
 fi

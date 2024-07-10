@@ -14,10 +14,14 @@ Listener::Listener(int sock_fd, std::unique_ptr<DetectorService> service) :
     cmd_stream{},
     ser{std::move(service)},
     th{std::make_unique<std::thread>([this]() { ser->run(); })}
-{ }
+{
+	log_info("constructing Listener");
+}
 
 Listener::~Listener()
-{ }
+{
+	log_info("destructing Listener");
+}
 
 void Listener::listen_loop() {
     while (true) {

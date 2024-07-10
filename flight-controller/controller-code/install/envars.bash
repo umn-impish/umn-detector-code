@@ -1,5 +1,5 @@
 # Detector serial numbers - to be sourced in .bashrc
-export HAFX_C1_SERIAL="undefined"
+export HAFX_C1_SERIAL="55FD9A8F4A344E5120202041131E05FF"
 export HAFX_M1_SERIAL="undefined"
 export HAFX_M5_SERIAL="undefined"
 export HAFX_X1_SERIAL="undefined"
@@ -12,7 +12,7 @@ base_port=61000
 export DET_SERVICE_PORT=$(($base_port + 999))
 
 
-offest=0
+offset=0
 export HAFX_C1_SCI_PORT=$((base_port + offset++))
 export HAFX_C1_DBG_PORT=$((base_port + offset++))
 
@@ -27,3 +27,5 @@ export HAFX_X1_DBG_PORT=$((base_port + offset++))
 
 export X123_SCI_PORT=$((base_port + offset++))
 export X123_DBG_PORT=$((base_port + offset++))
+
+export DET_HEALTH_PORT=$((base_port + offset++))

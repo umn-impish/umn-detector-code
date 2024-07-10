@@ -3,5 +3,8 @@
 #include <DetectorService.hh>
 #include <DetectorSupport.hh>
 #include <cstdlib>
+#include <memory>
 
 void usage(const char* prog);
+int make_listen_socket();
+std::unique_ptr<DetectorService> setup_service(int socket_fd);
