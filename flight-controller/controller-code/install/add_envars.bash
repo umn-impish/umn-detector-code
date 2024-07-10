@@ -5,8 +5,9 @@
 # simplifies coordination between udp_capture and
 # the controller program
 
-cp "detector_ports.bash" "$HOME/detector-config/umn_detector_ports.txt"
-source_str='source detector-config/umn_detector_ports.txt'
+out_path="$HOME/detector-config/umn_detector_envars.txt"
+cp "envars.bash" $out_path
+source_str="source $out_path"
 
 if [[ !( $(cat "$HOME/.bashrc") =~ $source_str ) ]]; then
     echo $source_str >> "$HOME/.bashrc"

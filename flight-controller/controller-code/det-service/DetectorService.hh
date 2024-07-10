@@ -4,8 +4,6 @@
 #include <variant>
 #include <vector>
 
-#include <Socket.hh>
-
 #include <logging.hh>
 #include <thread_safe_queue.hh>
 
@@ -37,38 +35,43 @@ public:
         DetectorMessages::StopPeriodicHealth,
         DetectorMessages::CollectNominal,
         DetectorMessages::StopNominal,
-        DetectorMessages::CollectNrlListMode,
         DetectorMessages::PromiseWrap
     >;
 
     void push_message(Message c);
     bool taking_nominal_data();
 
-    DetectorService(
-        std::shared_ptr<Socket> socket_,
-        const std::unordered_map<DetectorMessages::HafxChannel, std::string>& ser_nums,
-        const Detector::BasePorts& p
-    );
+    DetectorService(int socket_fd);
     ~DetectorService();
 
     void run();
     void evt_loop_step();
 
     bool alive() const;
+    
+    // make the constructor easier on the eyes
+    void put_hafx_ports(
+        std::unordered_map<DetectorMessages::HafxChannel, Detector::DetectorPorts>);
+    void put_x123_ports(Detector::DetectorPorts);
+    void put_hafx_serial_nums(
+        std::unordered_map<DetectorMessages::HafxChannel, std::string>);
 
 private:
-    std::shared_ptr<Socket> socket;
+    int socket_fd;
 
     bool _alive;
 
-    const Detector::BasePorts base_ports;
-    ThreadSafeQueue<Message> q; 
+    Detector::DetectorPorts x123_ports;
+    std::unordered_map<
+        DetectorMessages::HafxChannel, Detector::DetectorPorts> hafx_ports;
+
+    ThreadSafeQueue<Message> queue; 
     std::unique_ptr<Detector::X123Control> x123_ctrl;
 
     std::unordered_map<
         DetectorMessages::HafxChannel,
         std::unique_ptr<Detector::HafxControl> > hafx_ctrl;
-    const std::unordered_map<
+    std::unordered_map<
         DetectorMessages::HafxChannel,
         std::string> hafx_serial_nums;
 
@@ -94,7 +97,6 @@ private:
     void handle_command(DetectorMessages::StartPeriodicHealth cmd);
     void handle_command(DetectorMessages::StopPeriodicHealth cmd);
     void handle_command(DetectorMessages::CollectNominal cmd);
-    void handle_command(DetectorMessages::CollectNrlListMode cmd);
     void handle_command(DetectorMessages::PromiseWrap msg);
 
     // implementations & helpers for `handle_command`s

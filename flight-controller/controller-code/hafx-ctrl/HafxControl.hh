@@ -12,14 +12,9 @@
 namespace Detector
 {
 
-struct HafxControlConfig {
-    int data_channel;
-    int data_base_port;
-};
-
 class HafxControl {
 public:
-    HafxControl(std::shared_ptr<SipmUsb::UsbManager> driver_, const HafxControlConfig& hcc);
+    HafxControl(std::shared_ptr<SipmUsb::UsbManager> driver_, DetectorPorts ports);
 
     DetectorMessages::HafxHealth
     generate_health();
@@ -44,7 +39,10 @@ private:
     SettingsSaver settings_saver;
 
     std::optional<time_t> science_time_anchor;
-    std::unique_ptr<HafxTables> data_tables;
+
+    using science_t = DetectorMessages::HafxNominalSpectrumStatus;
+    std::unique_ptr<QueuedDataSaver<science_t> > science_saver;
+    std::unique_ptr<DataSaver> debug_saver;
 
     DetectorMessages::HafxNominalSpectrumStatus
     read_time_slice();
@@ -64,6 +62,8 @@ private:
 template <class ConT>
 void HafxControl::read_save_debug() {
     using dbt = DetectorMessages::HafxDebug;
+
+    // Map from a real type to an enum type
     static const std::unordered_map<
         std::type_index,
         dbt::Type>
@@ -88,7 +88,7 @@ void HafxControl::read_save_debug() {
     to_save.write(reinterpret_cast<char const*>(&tag), sizeof(tag));
     to_save.write(reinterpret_cast<char const*>(buf.data()), buf.size() * sizeof(buf[0]));
 
-    data_tables->debug->add(to_save.str());
+    debug_saver->add(to_save.str());
 }
 
 } // namespace Detector

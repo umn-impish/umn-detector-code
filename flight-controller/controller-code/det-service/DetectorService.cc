@@ -10,23 +10,32 @@ namespace dm = DetectorMessages;
 using hafx_chan = dm::HafxChannel;
 
 using namespace std::chrono_literals;
-static constexpr auto TIME_SLICE_DELAY = 2s;
-static constexpr auto LIST_MODE_DELAY = 3s;
 }
 
-DetectorService::DetectorService(
-    std::shared_ptr<Socket> socket_,
-    const std::unordered_map<dm::HafxChannel, std::string>& ser_nums,
-    const Detector::BasePorts& p
-) :
-    socket(socket_),
+DetectorService::DetectorService(int socket_fd) :
+    socket_fd(socket_fd),
     _alive{false},
-    base_ports{p},
-    q{},
+    x123_ports{},
+    hafx_ports{},
+    queue{},
     x123_ctrl{nullptr},
     hafx_ctrl{},
-    hafx_serial_nums{ser_nums}
+    hafx_serial_nums{}
 { }
+
+void DetectorService::put_hafx_ports(
+    std::unordered_map<dm::HafxChannel, Detector::DetectorPorts> p) {
+    hafx_ports = p;
+}
+
+void DetectorService::put_x123_ports(Detector::DetectorPorts p) {
+    x123_ports = p;
+}
+
+void DetectorService::put_hafx_serial_nums(
+    std::unordered_map<dm::HafxChannel, std::string> nums) {
+    hafx_serial_nums = nums;
+}
 
 DetectorService::~DetectorService() { }
 
@@ -62,7 +71,7 @@ void DetectorService::evt_loop_step() {
         }
     };
 
-    auto command = q.pop();
+    auto command = queue.pop();
     std::visit(cmd_visitor, std::move(command));
 }
 
@@ -100,10 +109,7 @@ void DetectorService::reconnect_detectors() {
         try {
             hafx_ctrl[chan] = std::make_unique<Detector::HafxControl>(
                 bridgeport_device_manager->device_map[sn],
-                Detector::HafxControlConfig{
-                    .data_channel = static_cast<int>(chan),
-                    .data_base_port = static_cast<int>(base_ports.hafx)
-                }
+                hafx_ports[chan]
             );
         } catch (const std::runtime_error& e) {
             push_message(dm::Shutdown{});
@@ -114,7 +120,7 @@ void DetectorService::reconnect_detectors() {
     // X-123
     // release the resource before re-making it
     x123_ctrl.reset();
-    x123_ctrl = std::make_unique<Detector::X123Control>(base_ports.x123);
+    x123_ctrl = std::make_unique<Detector::X123Control>(x123_ports);
 }
 
 void DetectorService::initialize() {
@@ -167,7 +173,7 @@ void DetectorService::send_health(
 
     std::memcpy(send.data(), (char*)&hp, HEALTH_SZ);
     int ret = sendto(
-        socket->fd(),
+        socket_fd,
         send.data(),
         send.size(),
         0,
@@ -193,7 +199,7 @@ void DetectorService::handle_command(dm::StartPeriodicHealth cmd) {
 
     using namespace std::chrono_literals;
     health_timer = TimerLifetime::create(
-        q.push_delay(cmd, cmd.seconds_between * 1s)
+        queue.push_delay(cmd, cmd.seconds_between * 1s)
     );
 }
 
@@ -271,13 +277,13 @@ void DetectorService::handle_command(dm::HafxDebug cmd) {
     else if (acq_type == dbr_t::Type::Histogram) {
         ctrl->restart_time_slice_or_histogram();
         hafx_debug_hist_timer = TimerLifetime::create(
-            q.push_delay(dm::QueryLegacyHistogram{cmd.ch}, delay)
+            queue.push_delay(dm::QueryLegacyHistogram{cmd.ch}, delay)
         );
     }
     else if (acq_type == dbr_t::Type::ListMode) {
         ctrl->restart_list();
         hafx_debug_list_timer = TimerLifetime::create(
-            q.push_delay(dm::QueryListMode{cmd.ch}, delay)
+            queue.push_delay(dm::QueryListMode{cmd.ch}, delay)
         );
     }
 }
@@ -309,7 +315,7 @@ void DetectorService::x123_debug(dm::X123Debug cmd) {
         x123_ctrl->init_debug_histogram();
         auto delay = std::chrono::seconds(cmd.histogram_wait);
         x123_debug_hist_timer = TimerLifetime::create(
-            q.push_delay(dm::QueryX123DebugHistogram{}, delay)
+            queue.push_delay(dm::QueryX123DebugHistogram{}, delay)
         );
     }
 
@@ -361,7 +367,8 @@ void DetectorService::read_all_time_slices() {
 
 void DetectorService::handle_command(dm::CollectNominal cmd) {
     auto finish = [this](auto cmd) {
-        nominal_timer = TimerLifetime::create(q.push_delay(cmd, TIME_SLICE_DELAY));
+        constexpr auto TIME_SLICE_DELAY = 2s;
+        nominal_timer = TimerLifetime::create(queue.push_delay(cmd, TIME_SLICE_DELAY));
     };
 
     if (not cmd.started) {
@@ -430,25 +437,16 @@ void DetectorService::handle_command(dm::StopNominal) {
     nominal_timer = nullptr;
 }
 
-void DetectorService::handle_command(dm::CollectNrlListMode cmd) {
-    if (not cmd.started) {
-        // TODO initialize list mode collection
-        cmd.started = true;
-        q.push_delay(cmd, LIST_MODE_DELAY);
-    }
+// TODO: NRL LIST MODE
 
-    // TODO
-    // read out list mode buffers
-    // save to files
-    q.push_delay(cmd, LIST_MODE_DELAY);
-}
+void DetectorService::push_message(DetectorService::Message m) {
+    queue.push(std::move(m));
 
-void DetectorService::push_message(DetectorService::Message c) {
-    q.push(std::move(c));
 }
 bool DetectorService::taking_nominal_data() {
     return (nominal_timer != nullptr);
 }
+
 bool DetectorService::alive() const {
     return _alive;
 }

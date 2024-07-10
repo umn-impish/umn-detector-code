@@ -8,15 +8,11 @@ static const std::unordered_map<std::string, DetectorMessages::HafxChannel> CH_M
     {"x1", DetectorMessages::HafxChannel::X1},
 };
 
-constexpr socklen_t FROM_SZ = sizeof(sockaddr_in);
-
-Listener::Listener(std::shared_ptr<Socket> s, const SerialMap& sns, const Detector::BasePorts& p) :
-    sock{s},
-    serial_nums{sns},
-    ports{p},
+Listener::Listener(int sock_fd, std::unique_ptr<DetectorService> service) :
+    socket_fd{sock_fd},
     from{},
     cmd_stream{},
-    ser{std::make_unique<DetectorService>(s, serial_nums, ports)},
+    ser{std::move(service)},
     th{std::make_unique<std::thread>([this]() { ser->run(); })}
 { }
 
@@ -79,10 +75,10 @@ Listener::receive_decode_msg() {
     std::memset(&from, 0, sizeof(from));
 
     // can't be const, so make a copy here
-    auto fsz = FROM_SZ;
+    auto fsz = static_cast<socklen_t>(sizeof(sockaddr_in));
     int bytes_received =
         recvfrom(
-            sock->fd(), buf.get(), BUF_SZ, 0, (sockaddr*)&from, &fsz);
+            socket_fd, buf.get(), BUF_SZ, 0, (sockaddr*)&from, &fsz);
 
     if (bytes_received < 0) {
         throw DetectorException{
@@ -160,8 +156,7 @@ Listener::receive_decode_msg() {
 }
 
 void Listener::reply(const std::string& msg) {
-    int fd = sock->fd();
-    if (sendto(fd, msg.c_str(), msg.size(), 0, (const sockaddr*)&from, FROM_SZ) < 0) {
+    if (sendto(socket_fd, msg.c_str(), msg.size(), 0, (const sockaddr*)&from, sizeof(sockaddr_in)) < 0) {
         throw DetectorException{"Failed to send message '" + msg + "': " + strerror(errno)};
     }
 }

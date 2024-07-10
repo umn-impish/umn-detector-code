@@ -1,5 +1,5 @@
 # main executable
-add_executable(det-controller controller.cc)
+add_executable(det-controller main.cc)
 
 # need built .a to be available
 target_link_directories(
