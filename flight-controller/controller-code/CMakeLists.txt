@@ -26,6 +26,8 @@ add_subdirectory(x123-ctrl)
 add_subdirectory(det-service)
 add_subdirectory(det-controller)
 
+add_subdirectory(install)
+
 # Install target
 install(
     # baseline programs required to function
