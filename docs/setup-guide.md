@@ -28,9 +28,9 @@ cd umn-detector-code/python
 pip install -e . --break-system-packages
 ```
 
-Before you compile the code you will have to edit one file that will setup environment varaibles for the service to use. You will be editing the serial numbers in the file so the service can communicate with the bridgeport boards. First you will have to find the serial number of the boards. Plug in the boards you want to use to a computer with the `run_mds` scripts from the Bridgeport software. Then run `run_mds.cmd` or `run_mds.sh` and in the commnd prompt pop up it will list 'Attached MCA' and then hex strings in brackets. These strings are the serial numbers of the Bridgeport boards. Write them down somewhere safe. 
+Before you compile the code you will have to edit one file that will setup environment variables for the service to use. You will be editing the serial numbers in the file so the service can communicate with the bridgeport boards. First you will have to find the serial number of the boards. Plug in the boards you want to use to a computer with the `run_mds` scripts from the Bridgeport software. Then run `run_mds.cmd` or `run_mds.sh` and in the commnd prompt pop up it will list 'Attached MCA' and then hex strings in brackets. These strings are the serial numbers of the Bridgeport boards. Write them down somewhere safe. 
 
-Next open the file that stores the environment varaibles via `nano`.
+Next open the file that stores the environment variables via `nano`.
 
 ```
 nano umn-detector-code/flight-controller/controller-code/install/envars.bash
@@ -50,8 +50,10 @@ Next, `cd` into the flight code directory and compile the code:
 cd umn-detector-code/flight-controller
 mkdir build && cd build
 cmake ..
-make -j4
+sudo make -j4
 sudo make install
+sudo udevadm control --reload-rules
+sudo udevadm trigger
 exec $SHELL
 ```
 
