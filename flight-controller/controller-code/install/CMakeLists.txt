@@ -10,5 +10,4 @@ install(FILES "det-controller.service" "det-parent.target" "det-udpcapture-hafx-
 add_custom_target(
 	run_script ALL
 	COMMAND ${CMAKE_COMMAND} -E env bash ${CMAKE_SOURCE_DIR}/controller-code/install/add_envars.bash
-	COMMAND ${CMAKE_COMMAND} -E env bash ${CMAKE_SOURCE_DIR}/controller-code/install/reload_usb.bash
 )
