@@ -7,6 +7,7 @@ Type=simple
 Restart=always
 RestartSec=1
 User=det
+EnvironmentFile=/etc/systemd/system/detvars.env
 WorkingDirectory=/home/det/umn-detector-code/lab-scripts/
 ExecStart=det-controller
 
