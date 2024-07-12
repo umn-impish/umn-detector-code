@@ -18,6 +18,7 @@ sudo apt install libusb-1.0-0-dev gpiod libgpiod-dev libboost-all-dev libgtest-d
 
 Clone the flight code repository:
 ```
+cd
 git clone https://github.com/umn-impish/umn-detector-code.git
 ```
 
@@ -27,29 +28,32 @@ cd umn-detector-code/python
 pip install -e . --break-system-packages
 ```
 
+Before you compile the code you will have to edit one file that will setup environment varaibles for the service to use. You will be editing the serial numbers in the file so the service can communicate with the bridgeport boards. First you will have to find the serial number of the boards. Plug in the boards you want to use to a computer with the `run_mds` scripts from the Bridgeport software. Then run `run_mds.cmd` or `run_mds.sh` and in the commnd prompt pop up it will list 'Attached MCA' and then hex strings in brackets. These strings are the serial numbers of the Bridgeport boards. Write them down somewhere safe. 
+
+Next open the file that stores the environment varaibles via `nano`.
+
+```
+nano umn-detector-code/flight-controller/controller-code/install/envars.bash
+```
+From there you will see these lines:
+```
+HAFX_C1_SERIAL="55FD9A8F4A344E5120202041131E05FF"
+HAFX_M1_SERIAL="none"
+HAFX_M5_SERIAL="none"
+HAFX_X1_SERIAL="none"
+```
+The `HAFX_C1_SERIAL` is the serial number of the board used at UMN (as of 7/24). Change these entries to be the serial numbers of the boards that you got from the Bridgeport software. If you are using only one board just change the c1 serial number and leave the rest.
+Save it via ctrl-x, typing y, and hitting enter once.
+
 Next, `cd` into the flight code directory and compile the code:
 ```
 cd umn-detector-code/flight-controller
 mkdir build && cd build
 cmake ..
 make -j4
+sudo make install
+exec $SHELL
 ```
-
-Now that the code is compiled you will have to get the Serial numbers of the bridgeport boards being used. Plug in the boards you want to use to a computer with the `run_mds` scripts from the Bridgeport software. Then run `run_mds.cmd` or `run_mds.sh` and in the commnd prompt pop up it will list 'Attached MCA' and then hex strings in brackets. These strings are the serial numbers of the Bridgeport boards. Write them down somewhere safe.
-
-Once you have the serial numbers you will have to edit the `launch_detector.bash` script which starts up the detector service. Open it with nano:
-```
-nano umn-detector-code/lab-scripts/launch-detector.bash
-```
-From there you will see these lines:
-```
-c1_serial_number="55FD9A8F4A344E5120202041131E05FF"
-m1_serial_number="none"
-m5_serial_number="none"
-x1_serial_number="none"
-```
-The `c1_serial_number` is the serial number of the board used at UMN (as of 7/24). Change these entries to be the serial numbers of the boards that you got from the Bridgeport software. If you are using only one board just change the c1 serial number and leave the rest.
-Save it via ctrl-x, typing y, and hitting enter once.
 
 ## Usage
 
@@ -86,6 +90,7 @@ During data analysis, the ADC bin map is undone to map the 123 IMPRESS histogram
 
 PPS is required for nominal science mode to have very accurate timestamps.
 However, it is not required if you want to "just" take a spectrum.
+
 ...
 
 ## Data Analysis
