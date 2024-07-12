@@ -83,52 +83,59 @@ public:
  * So this lets us save a fixed number of events per file and ensure that each
  * file starts with a data chunk that has a valid time.
  * */
+template<class MessageT>
 class QueuedDataSaver {
 public:
-    using msg_t = DetectorMessages::HafxNominalSpectrumStatus;
+    using msg_t = MessageT;
+    QueuedDataSaver(unsigned short udp_port, size_t num_before_save) :
+        ds{std::make_unique<DataSaver>(udp_port)},
+        data_blob{},
+        num_before_save{num_before_save}
+    { }
 
-    QueuedDataSaver(unsigned short udp_port, size_t num_before_save);
-    ~QueuedDataSaver();
+    ~QueuedDataSaver()
+    { }
 
     // returns false if data is not added
-    bool add(msg_t const& m);
+    bool add(msg_t const& m) {
+        bool skip_data_piece = (data_blob.empty() && m.time_anchor < 1);
+        if (skip_data_piece) {
+            return false;
+        }
+
+        data_blob.push_back(m);
+
+        if (data_blob.size() >= num_before_save) {
+            save_blob();
+        }
+
+        return true;
+    }
 
 private:
     std::unique_ptr<DataSaver> ds;
     std::vector<msg_t> data_blob;
     size_t num_before_save;
 
-    void save_blob();
+    void save_blob() {
+        auto num_bytes = num_before_save * sizeof(msg_t);
+        ds->add({
+          reinterpret_cast<unsigned char*>(data_blob.data()),
+          num_bytes
+        });
+
+        // if we have added another timestamped piece of data,
+        // this will put it at the front
+        // if there are only `num_before_save` pieces of data,
+        // the iterators will be equal and nothing will be copied (begin + nbs == end)
+        data_blob = std::vector<msg_t>(data_blob.begin() + num_before_save, data_blob.end());
+    }
 };
 
-struct BasePorts {
-    unsigned short x123;
-    unsigned short hafx;
+struct DetectorPorts {
+    unsigned short science;
+    unsigned short debug;
 };
 
-struct X123Tables {
-    std::shared_ptr<DataSaver> science;
-    std::shared_ptr<DataSaver> debug;
-
-    X123Tables(int base_port);
-};
-
-struct HafxTables {
-    std::shared_ptr<QueuedDataSaver> time_slice;
-    std::shared_ptr<DataSaver> list;
-    std::shared_ptr<DataSaver> debug;
-
-    HafxTables() =delete;
-    HafxTables(int chan, int base_port);
-};
-
-class Settings {
-    using HafxChannel = DetectorMessages::HafxChannel;
-public:
-    DetectorMessages::X123Settings x123;
-    std::unordered_map<HafxChannel, DetectorMessages::HafxSettings> hafx;
-    Settings();
-};
-
-}
+} // namespace Detector
 

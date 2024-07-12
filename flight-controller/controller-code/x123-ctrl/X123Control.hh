@@ -25,7 +25,7 @@ namespace Detector {
 
 class X123Control {
 public:
-    X123Control(int data_base_port);
+    X123Control(DetectorPorts ports);
     ~X123Control();
 
     DetectorMessages::X123Health
@@ -49,12 +49,14 @@ public:
     void read_save_debug_ascii(const std::string& ascii_query);
 
     bool driver_valid() const;
+
 private:
     std::unique_ptr<X123DriverWrap> driver;
     uint16_t local_next_buffer_num;
     time_t time_anchor;
     uint16_t num_histogram_bins;
-    std::unique_ptr<Detector::X123Tables> data_tables;
+    std::unique_ptr<DataSaver> science_saver;
+    std::unique_ptr<DataSaver> debug_saver;
 
     std::unique_ptr<SettingsSaver> settings_saver;
     DetectorMessages::X123Settings settings;
@@ -80,27 +82,4 @@ private:
 };
 
 } // namespace Detector
-/*
-    uint16_t local_next_x123_buffer_num;
-    time_t x123_time_anchor;
-    void handle_command(DetectorMessages::ImmediateX123BufferRead const&&);
 
-
-    // x123 helpers
-    void upload_new_x123_ascii(std::string const& ascii);
-
-    void increment_reset_x123_buffering(uint16_t num_bins, std::vector<uint8_t> const& status_bytes);
-    DetectorMessages::X123NominalSpectrumStatus
-    rebin_status_x123(std::vector<uint8_t> const& buf);
-    std::vector<uint32_t>
-    rebin_x123(std::vector<uint32_t> const& start);
-
-    void save_x123_debug(
-        X123Driver::Packets::BasePacket const& pack,
-        DetectorMessages::X123Debug::Type const& t
-    );
-    void x123_debug_histogram(std::chrono::seconds delay);
-
-    std::unique_ptr<X123Driver::Packets::Responses::BaseSpectrum>
-    elicit_x123_spectrum_packet();
-*/

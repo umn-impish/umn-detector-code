@@ -1,0 +1,14 @@
+[Unit]
+Description=UDP Capture Service for DET Health
+PartOf=det-parent.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=det
+WorkingDirectory=/home/det/umn-detector-code/lab-scripts/
+ExecStart=udp_capture -m 60000 -T 60 -t 60 -l 61010 -b "data/detector-health" -p 'gzip "$out_file"; mv "$out_file.gz" downlink'
+
+[Install]
+WantedBy=multi-user.target

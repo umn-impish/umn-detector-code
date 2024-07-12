@@ -6,9 +6,6 @@
 
 #include <DetectorService.hh>
 #include <logging.hh>
-#include <Socket.hh>
-
-using SerialMap = std::unordered_map<DetectorMessages::HafxChannel, std::string>;
 
 DetectorMessages::HafxSettings
 parse_hafx_settings(std::stringstream& ss);
@@ -17,9 +14,7 @@ parse_x123_settings(std::stringstream& ss);
 
 class Listener {
 private:
-    std::shared_ptr<Socket> sock;
-    SerialMap serial_nums;
-    Detector::BasePorts ports;
+    int socket_fd;
     sockaddr_in from;
     std::stringstream cmd_stream;
     std::unique_ptr<DetectorService> ser;
@@ -41,7 +36,7 @@ public:
 
     Listener() =delete;
 
-    Listener(std::shared_ptr<Socket> s, const SerialMap& sns, const Detector::BasePorts& p);
+    Listener(int sock_fd, std::unique_ptr<DetectorService> service);
     ~Listener();
 
     void listen_loop();

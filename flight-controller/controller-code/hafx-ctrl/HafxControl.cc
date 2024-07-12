@@ -5,11 +5,17 @@
 namespace Detector
 {
 
-HafxControl::HafxControl(std::shared_ptr<SipmUsb::UsbManager> driver_, const HafxControlConfig& hcc) :
+constexpr size_t SLICES_PER_SECOND = 32;
+HafxControl::HafxControl(std::shared_ptr<SipmUsb::UsbManager> driver_, DetectorPorts ports) :
     driver{driver_},
     settings_saver{driver->get_arm_serial() + ".bin"},
     science_time_anchor{},
-    data_tables{std::make_unique<HafxTables>(hcc.data_channel, hcc.data_base_port)}
+    // christ that's a long line
+    science_saver{std::make_unique<
+                  QueuedDataSaver<
+                  DetectorMessages::HafxNominalSpectrumStatus> >(
+                  ports.science, SLICES_PER_SECOND)},
+    debug_saver{std::make_unique<DataSaver>(ports.debug)}
 { }
 
 DetectorMessages::HafxHealth HafxControl::generate_health() {
@@ -72,7 +78,7 @@ void HafxControl::poll_save_time_slice() {
             continue;
         }
         auto nominal = read_time_slice();
-        data_tables->time_slice->add(nominal);
+        science_saver->add(nominal);
     }
 }
 
