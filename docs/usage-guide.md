@@ -1,6 +1,6 @@
 # How to install and run IMPRESS / EXACT / IMPISH flight code
 
-This guide will show you how to setup the flight code on a newly-wiped Raspberry Pi.
+This guide will show you how to set up the flight code on a newly-wiped Raspberry Pi.
 
 We recommend running this code on a 64-bit Raspberry Pi 3 board.
 
@@ -17,7 +17,7 @@ Use the [Raspberry Pi imager](https://www.raspberrypi.com/software/) to set up a
 ## Installation
 
 ### Install libraries and clone the code
-First, install required libraries on the 
+First, install required libraries on the Pi.
 ```
 sudo apt install libusb-1.0-0-dev gpiod libgpiod-dev libboost-all-dev libgtest-dev libsystemd-dev cmake build-essential git python3 python3-pip
 ```
@@ -63,7 +63,7 @@ Next, `cd` into the flight code directory and compile the code:
 cd umn-detector-code/flight-controller
 mkdir build && cd build
 cmake ..
-sudo make -j4
+make -j4
 sudo make install
 sudo udevadm control --reload-rules
 sudo udevadm trigger
@@ -94,7 +94,7 @@ When you run `first_boot.bash`,
     a new a new bin map is sent to the SiPM-3000.
 The bin map is generated based off of configuration files in the Python package--
     see `umn-detector-code/python/umndet/common/constants.py`.
-During data analysis, the ADC bin map is undone to map the 123 IMPRESS histoghttps://linux.die.net/man/1/scpram
+During data analysis, the ADC bin map is undone to map the 123 IMPRESS histogram
     bins back to the original 4096 Bridgeport ADC bins.
 
 `first_boot.bash` also sets the number of bins used by the X-123,
