@@ -1,5 +1,4 @@
 set(DET_PROJ_PATH ${CMAKE_CURRENT_SOURCE_DIR})
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
@@ -25,6 +24,8 @@ add_subdirectory(x123-ctrl)
 
 add_subdirectory(det-service)
 add_subdirectory(det-controller)
+
+add_subdirectory(install)
 
 # Install target
 install(

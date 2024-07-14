@@ -15,13 +15,9 @@ std::unique_ptr<Detector::HafxControl> get_test_hafx_ctrl() {
     std::string TEST_SERIAL{"55FD9A8F4A344E5120202041131E05FF"};
     SipmUsb::BridgeportDeviceManager device_manager;
 
-    Detector::HafxControlConfig cnf{
-        static_cast<uint8_t>(DetectorMessages::HafxChannel::C1),
-        base_port
-    };
     return std::make_unique<Detector::HafxControl>(
         device_manager.device_map.at(TEST_SERIAL),
-        cnf
+        Detector::DetectorPorts{base_port, base_port + 1}
     );
 }
 

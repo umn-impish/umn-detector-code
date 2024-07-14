@@ -7,10 +7,11 @@ namespace res = X123Driver::Packets::Responses;
 
 namespace Detector {
 
-X123Control::X123Control(int data_base_port) :
+X123Control::X123Control(DetectorPorts ports) :
     driver{std::make_unique<X123DriverWrap>()},
     local_next_buffer_num{0},
-    data_tables{std::make_unique<X123Tables>(data_base_port)},
+    science_saver{std::make_unique<DataSaver>(ports.science)},
+    debug_saver{std::make_unique<DataSaver>(ports.debug)},
     settings_saver{std::make_unique<SettingsSaver>("x123-settings.bin")},
     settings{fetch_settings()}
 {
@@ -99,7 +100,7 @@ void X123Control::read_save_sequential_buffer() {
     nominal_spectrum_status.write(
             reinterpret_cast<char const*>(rebinned_spectrum.data()),
             spec_sz * sizeof(rebinned_spectrum[0]));
-    data_tables->science->add(nominal_spectrum_status.str());
+    science_saver->add(nominal_spectrum_status.str());
 }
 
 void X123Control::restart_hardware_controlled_sequential_buffering() {
@@ -327,7 +328,7 @@ void X123Control::save_debug(
     save.write(reinterpret_cast<char const*>(&buf_sz), sizeof(buf_sz));
     save.write(reinterpret_cast<char const*>(buf.data()), buf.size());
 
-    data_tables->debug->add(save.str());
+    debug_saver->add(save.str());
 }
 
 bool X123Control::driver_valid() const {

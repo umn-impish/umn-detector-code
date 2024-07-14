@@ -68,6 +68,9 @@ DeviceHandle::DeviceHandle(libusb_device_handle *handle_, std::shared_ptr<Contex
   : handle(handle_)
   , ctx(ctx_) {
     log_info("Constructing LibUsb::DeviceHandle from existing handle");
+    if (handle == nullptr) {
+        throw UsbException{"Existing handle is null (not connected?)"};
+    }
     // detach/retach kernel driver from interfaces we claim
     auto ret = libusb_set_auto_detach_kernel_driver(handle, 1);
     if (ret < 0) {
