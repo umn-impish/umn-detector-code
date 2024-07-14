@@ -1,6 +1,0 @@
-[Unit]
-Description=Parent systemd for detector services
-Wants=det-controller.service det-udpcapture-health.service det-udpcapture-x123-sci.service det-udpcapture-x123-debug.service det-udpcapture-hafx-sci-c1.service det-udpcapture-hafx-sci-m1.service det-udpcapture-hafx-sci-m5.service det-udpcapture-hafx-sci-x1.service det-udpcapture-hafx-debug-c1.service det-udpcapture-hafx-debug-m1.service det-udpcapture-hafx-debug-m5.service det-udpcapture-hafx-debug-x1.service
-
-[Install]
-WantedBy=multi-user.target

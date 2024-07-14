@@ -2,33 +2,40 @@
 
 # Start the detector UDP capture processes
 
-data_folder="data"
-mkdir -p "$data_folder"
-mkdir -p "downlink"
-mkdir -p "downlink/rebinned"
+mkdir -p 'live'
+mkdir -p 'completed'
+mkdir -p "completed/rebinned"
+# The post-process command for time_slice data has strange
+# string expansion, so we just manually replace the two
+# directories above if we want to change their names
+post_process_time_slice_cmd='
+gzip "$out_file"; 
+impress-rebinner time+energy "$out_file.gz";
+mv "$(dirname $out_file)/time+energy-$(basename $out_file).gz" completed/rebinned;
+mv "$out_file.gz" completed;'
 
 source udpcap_ports.bash
 default_timeout=5
 
+# Default: zip and move
 post_process_cmd='
 gzip "$out_file"; 
-mv "$out_file.gz" downlink'
+mv "$out_file.gz" completed'
 
 # x-123 udp capture processes
 udp_capture -m 64000 \
     -T "$default_timeout" \
     -t "$default_timeout" \
     -l $X123_SCI_PORT \
-    -b "data/x123-sci" \
+    -b "live/x123-sci" \
     -p "$post_process_cmd" &
 udp_capture -m 64000 \
     -T "$default_timeout" \
     -t "$default_timeout" \
     -l $X123_DBG_PORT \
-    -b "data/x123-debug" \
+    -b "live/x123-debug" \
     -p "$post_process_cmd" &
 
-# scintillator (hafx) udp capture processes
 # time_slice data listeners (IMPRESS)
 # update these as appropriate
 time_slice_size=512
@@ -39,8 +46,8 @@ max_data_sz=$((time_slice_size * time_slices_per_sec * num_seconds_in_file))
 post_process_time_slice_cmd='
 gzip "$out_file"; 
 ./rebin.py time+energy "$out_file.gz";
-mv "$(dirname $out_file)/time+energy-$(basename $out_file).gz" downlink/rebinned;
-mv "$out_file.gz" downlink;'
+mv "$(dirname $out_file)/time+energy-$(basename $out_file).gz" completed/rebinned;
+mv "$out_file.gz" completed;'
 
 nom_ports_names=( [$HAFX_C1_SCI_PORT]='hafx-time-slice-c1' \
     [$HAFX_M1_SCI_PORT]='hafx-time-slice-m1' \
@@ -51,7 +58,7 @@ for port in "${!nom_ports_names[@]}"; do
         -T "$default_timeout" \
         -t "$default_timeout" \
         -l $port \
-        -b "data/${nom_ports_names[$offst]}" \
+        -b "live/${nom_ports_names[$offst]}" \
         -p "$post_process_time_slice_cmd" &
 done
 
@@ -65,10 +72,9 @@ for port in "${!dbg_ports_names[@]}"; do
         -T "$default_timeout" \
         -t "1" \
         -l $port \
-        -b "data/${dbg_ports_names[$offst]}" \
+        -b "live/${dbg_ports_names[$offst]}" \
         -p "$post_process_cmd" &
 done
 
 # Health listener
-# forward to CDH ip/port
-udp_capture -m 60000 -T "$default_timeout" -t "$default_timeout" -l "$DET_HEALTH_PORT" -b "data/detector-health" -p "$post_process_cmd" &
+udp_capture -m 60000 -T "$default_timeout" -t "$default_timeout" -l "$DET_HEALTH_PORT" -b "live/detector-health" -p "$post_process_cmd" &

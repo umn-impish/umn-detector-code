@@ -21,7 +21,6 @@ exc1="./bin/det-controller $det_port"
 exc2=" $c1_serial_number $m1_serial_number $m5_serial_number $x1_serial_number"
 exc3=" $x123_udp_capture_base_port $hafx_udp_capture_base_port"
 
-# timestamp for log file; redirect output to log file
 exc="$exc1$exc2$exc3"
 
 echo "executing following command: '$exc'"

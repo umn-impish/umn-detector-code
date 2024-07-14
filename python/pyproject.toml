@@ -21,6 +21,7 @@ impress-rebinner = "umndet.rebinner.file_based_rebinner:main"
 # Tools (simulations, ...)
 simulate-impress-health = "umndet.tools.simulate_health:main"
 simulate-impress-science = "umndet.tools.simulate_slices:main"
+generate-impress-bin-txt = "umndet.tools.generate_binning:main"
 
 # Ground (decoders, ...)
 decode-impress-health = "umndet.ground.json_decoders:decode_health"

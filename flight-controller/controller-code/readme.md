@@ -1,3 +1,7 @@
+## How to run
+- Build the `det-controller` program
+- Run `launch-detector.sh` but modify it first with the proper port and serial numbers.
+
 ## Library list
 ### `logging`
 Logs to the `systemd` central logger which can be

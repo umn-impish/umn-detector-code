@@ -1,6 +1,8 @@
 # IMPRESS / EXACT / IMPISH : flight and some ground code
 ## This repo contains flight and some ground code for decoding data from IMPRESS, EXACT, and IMPISH missions.
 
+## Please see [docs](./docs) for some documentation on how to use the code in the repo.
+
 ### Contents
 
 #### `flight-controller`

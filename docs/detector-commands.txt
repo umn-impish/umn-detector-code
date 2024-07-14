@@ -1,4 +1,10 @@
-== Detector Commands | IMPRESS/EXACT ==
+== Detector Commands | IMPRESS/EXACT/IMPISH ==
+
+All commands listed in this document may be sent to the IMPRESS/EXACT/IMPISH
+flight controller code via UDP.
+Each command responds with either "ack-ok\nmessage" or "error\nmessage".
+If an error occurs you may check the systemd logs for more details.
+
 
 terminate
     Kills the process.
@@ -64,8 +70,8 @@ settings-update [detector] . . .
         settings-update hafx x1 ...
             Here "..." can be any one of the following:
             adc_rebin_edges
-                Custom edges we send to each detector for the 122 ADC bins.
-                Maps from the 4096 native Bridgeport bins to the 122 time_slice bins.
+                Custom edges we send to each detector for the 123 ADC bins.
+                Maps from the 4096 native Bridgeport bins to the 123 time_slice bins.
                 Format described in firmware document.
             fpga_ctrl
                 fpga_ctrl registers (Bridgeport)
