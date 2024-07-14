@@ -23,7 +23,8 @@ echo "init" > $det_udp_dev
 # tell controller we want to read 1024-bins histograms from X-123
 echo 'settings-update x123 ascii_settings MCAC=1024;' > $det_udp_dev
 # X-123 gets binned down to just 4 big histogram bins
-echo 'settings-update x123 adc_rebin_edges 0 256 512 768 1024' > $det_udp_dev
+# Leave this empty for now (don't rebin the X-123 data at all)
+# echo 'settings-update x123 adc_rebin_edges 0 256 512 768 1024' > $det_udp_dev
 
 ### HaFX registers
 # From Dec 2023
