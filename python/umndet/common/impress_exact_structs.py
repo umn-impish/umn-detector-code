@@ -201,8 +201,8 @@ class X123Debug:
         for i in range(0, len(data), 3):
             histogram.append(
                 data[i] |
-                (data[i] << 8) |
-                (data[i] << 16)
+                (data[i+1] << 8) |
+                (data[i+2] << 16)
             )
 
         return {
@@ -214,8 +214,10 @@ class X123Debug:
         return base64.b64encode(self.bytes).decode('utf-8')
 
     def _decode_ascii(self):
+        # the X-123 buffer comes out as padded with a bunch of zeros at the end
+        first_null = self.bytes.index(0)
         # ASCII settings string is...ASCII already
-        return self.bytes.decode('utf-8')
+        return self.bytes[:first_null].decode('utf-8')
 
 
 class HafxDebug:
