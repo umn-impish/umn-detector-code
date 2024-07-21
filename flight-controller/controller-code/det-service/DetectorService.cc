@@ -161,7 +161,7 @@ void DetectorService::handle_command(dm::Shutdown) {
     hafx_ctrl.clear();
 
     _alive = false;
-    log_debug("detector shutdown");
+    log_debug("detector sleep");
 }
 
 void DetectorService::send_health(

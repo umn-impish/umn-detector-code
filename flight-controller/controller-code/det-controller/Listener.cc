@@ -104,22 +104,22 @@ Listener::receive_decode_msg() {
         exit(EXIT_SUCCESS);
     }
 
-    else if (cmd_name == "init") {
+    else if (cmd_name == "wake") {
         return DetectorMessages::Initialize{};
     }
 
     // die if uninitialized
     else if (!th || !ser || !ser->alive()) {
-        // Special case: "stop" command given to a shut-down state
+        // Special case: "stop" command given to a sleep state
         // shouldn't throw an error because it is effectively a no-op
         if (cmd_name.starts_with("stop-")) {
             return { };
         }
-        std::string err_str{"Bad command given to shut-down detector: "};
+        std::string err_str{"Bad command given to sleeping detector: "};
         throw DetectorException{err_str + cmd_name};
     }
 
-    else if (cmd_name == "shutdown") {
+    else if (cmd_name == "sleep") {
         return DetectorMessages::Shutdown {};
     }
 
@@ -160,17 +160,22 @@ Listener::receive_decode_msg() {
 }
 
 void Listener::reply(const std::string& msg) {
-    if (sendto(socket_fd, msg.c_str(), msg.size(), 0, (const sockaddr*)&from, sizeof(sockaddr_in)) < 0) {
-        throw DetectorException{"Failed to send message '" + msg + "': " + strerror(errno)};
-    }
-}
-
-void Listener::error_reply(const std::string& msg) {
     bool no_sender = (from.sin_family == 0 && from.sin_port == 0);
     if (no_sender) {
         std::cerr << "NO SENDER PRESENT?" << std::endl << msg << std::endl;
         return;
     }
+
+    int ret = sendto(
+        socket_fd, msg.c_str(), msg.size(), 0,
+        (const sockaddr*)&from, sizeof(sockaddr_in)
+    );
+    if (ret < 0) {
+        throw DetectorException{"Failed to send message '" + msg + "': " + strerror(errno)};
+    }
+}
+
+void Listener::error_reply(const std::string& msg) {
     reply("error\n" + msg);
 }
 
