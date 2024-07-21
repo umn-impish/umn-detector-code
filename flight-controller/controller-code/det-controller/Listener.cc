@@ -139,12 +139,6 @@ Listener::receive_decode_msg() {
         return debug();
     }
 
-    else if (cmd_name == "manual-health") {
-        return DetectorMessages::ManualHealthPacket{
-            .destination = from
-        };
-    }
-
     else if (cmd_name == "start-periodic-health") {
         return start_periodic_health();
     }

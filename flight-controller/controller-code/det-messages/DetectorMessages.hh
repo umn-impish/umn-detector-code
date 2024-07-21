@@ -154,7 +154,6 @@ namespace DetectorMessages {
         HafxSettings,
         HafxDebug,
         X123Debug,
-        ManualHealthPacket,
         StartPeriodicHealth,
         StopPeriodicHealth
     >;

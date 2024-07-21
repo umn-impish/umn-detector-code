@@ -187,10 +187,6 @@ void DetectorService::send_health(
     }
 }
 
-void DetectorService::handle_command(dm::ManualHealthPacket cmd) {
-    send_health(cmd.destination, generate_health());
-}
-
 void DetectorService::handle_command(dm::StartPeriodicHealth cmd) {
     auto hp = generate_health();
     for (const auto& dest : cmd.fwd) {
