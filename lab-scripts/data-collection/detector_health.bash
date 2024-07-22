@@ -15,9 +15,9 @@ bash check_running.bash || exit 1
 acq_time="$1"
 time_between="$2"
 source udpcap_ports.bash
-echo $health_port
+echo $DET_HEALTH_PORT
 echo "wake" > $det_udp_dev
-echo "start-periodic-health $time_between 127.0.0.1:$health_port" > $det_udp_dev
+echo "start-periodic-health $time_between 127.0.0.1:$DET_HEALTH_PORT" > $det_udp_dev
 echo "SLEEPIN FOR $acq_time"
 sleep $(($acq_time))
 echo "sleep" > $det_udp_dev

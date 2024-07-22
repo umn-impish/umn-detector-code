@@ -20,7 +20,7 @@ time_between_health=1
 echo "wake" > $det_udp_dev
 
 # Start real data acquisition
-echo "start-periodic-health $time_between_health 127.0.0.1:$health_port" > $det_udp_dev
+echo "start-periodic-health $time_between_health 127.0.0.1:$DET_HEALTH_PORT" > $det_udp_dev
 echo "start-nominal" > $det_udp_dev
 sleep $(( $acq_time + 1 ))
 
