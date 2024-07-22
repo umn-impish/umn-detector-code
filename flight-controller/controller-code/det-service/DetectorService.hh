@@ -30,7 +30,6 @@ public:
         DetectorMessages::QueryLegacyHistogram,
         DetectorMessages::QueryX123DebugHistogram,
 
-        DetectorMessages::ManualHealthPacket,
         DetectorMessages::StartPeriodicHealth,
         DetectorMessages::StopPeriodicHealth,
         DetectorMessages::CollectNominal,
@@ -93,7 +92,6 @@ private:
     void handle_command(DetectorMessages::QueryListMode cmd);
     void handle_command(DetectorMessages::QueryX123DebugHistogram cmd);
     void handle_command(DetectorMessages::StopNominal cmd);
-    void handle_command(DetectorMessages::ManualHealthPacket cmd);
     void handle_command(DetectorMessages::StartPeriodicHealth cmd);
     void handle_command(DetectorMessages::StopPeriodicHealth cmd);
     void handle_command(DetectorMessages::CollectNominal cmd);

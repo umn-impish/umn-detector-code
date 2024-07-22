@@ -15,7 +15,7 @@ bash check_running.bash || exit 1
 acq_time="$1"
 det="$2"
 source udpcap_ports.bash
-echo "init" > $det_udp_dev
+echo "wake" > $det_udp_dev
 echo "debug hafx $det list_mode $acq_time" > $det_udp_dev
 sleep $(($acq_time + 1))
-echo "shutdown" > $det_udp_dev
+echo "sleep" > $det_udp_dev

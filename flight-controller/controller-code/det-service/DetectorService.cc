@@ -161,7 +161,7 @@ void DetectorService::handle_command(dm::Shutdown) {
     hafx_ctrl.clear();
 
     _alive = false;
-    log_debug("detector shutdown");
+    log_debug("detector sleep");
 }
 
 void DetectorService::send_health(
@@ -185,10 +185,6 @@ void DetectorService::send_health(
         std::string err{strerror(errno)};
         throw DetectorException{"Problem sending health packet: " + err};
     }
-}
-
-void DetectorService::handle_command(dm::ManualHealthPacket cmd) {
-    send_health(cmd.destination, generate_health());
 }
 
 void DetectorService::handle_command(dm::StartPeriodicHealth cmd) {

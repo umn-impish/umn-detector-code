@@ -14,7 +14,7 @@ bash check_running.bash || exit 1
 regs="$1"
 det="$2"
 source udpcap_ports.bash
-echo "init" > $det_udp_dev
+echo "wake" > $det_udp_dev
 echo "debug hafx $det $regs" > $det_udp_dev
 sleep 1
-echo "shutdown" > $det_udp_dev
+echo "sleep" > $det_udp_dev
