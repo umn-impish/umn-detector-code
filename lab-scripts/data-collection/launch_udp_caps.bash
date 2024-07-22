@@ -58,7 +58,7 @@ for port in "${!nom_ports_names[@]}"; do
         -T "$default_timeout" \
         -t "$default_timeout" \
         -l $port \
-        -b "live/${nom_ports_names[$offst]}" \
+        -b "live/${nom_ports_names[$port]}" \
         -p "$post_process_time_slice_cmd" &
 done
 
@@ -72,7 +72,7 @@ for port in "${!dbg_ports_names[@]}"; do
         -T "$default_timeout" \
         -t "1" \
         -l $port \
-        -b "live/${dbg_ports_names[$offst]}" \
+        -b "live/${dbg_ports_names[$port]}" \
         -p "$post_process_cmd" &
 done
 
