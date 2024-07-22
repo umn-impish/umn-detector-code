@@ -12,7 +12,7 @@ bash check_running.bash || exit 1
 
 acq_time="$1"
 source udpcap_ports.bash
-echo "init" > $det_udp_dev
+echo "wake" > $det_udp_dev
 echo "debug x123 histogram $acq_time" > $det_udp_dev
 sleep $(($acq_time + 1))
-echo "shutdown" > $det_udp_dev
+echo "sleep" > $det_udp_dev

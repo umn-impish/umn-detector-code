@@ -17,7 +17,7 @@ source udpcap_ports.bash
 acq_time="$1"
 time_between_health=1
 
-echo "init" > $det_udp_dev
+echo "wake" > $det_udp_dev
 
 # Start real data acquisition
 echo "start-periodic-health $time_between_health 127.0.0.1:$health_port" > $det_udp_dev
@@ -27,4 +27,4 @@ sleep $(( $acq_time + 1 ))
 # Clean up
 echo "stop-nominal" > $det_udp_dev
 echo "stop-periodic-health" > $det_udp_dev
-echo "shutdown" > $det_udp_dev
+echo "sleep" > $det_udp_dev

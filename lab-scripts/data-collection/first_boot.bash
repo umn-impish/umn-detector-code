@@ -17,7 +17,7 @@ bash check_running.bash || exit 1
 
 ## Now send the commands to actually update all the settings
 source udpcap_ports.bash
-echo "init" > $det_udp_dev
+echo "wake" > $det_udp_dev
 
 ### X-123 registers
 # tell controller we want to read 1024-bins histograms from X-123
@@ -64,4 +64,4 @@ echo "settings-update hafx m5 adc_rebin_edges $bin_mapping" > $det_udp_dev
 echo "settings-update hafx x1 adc_rebin_edges $bin_mapping" > $det_udp_dev
 
 
-echo "shutdown" > $det_udp_dev
+echo "sleep" > $det_udp_dev
