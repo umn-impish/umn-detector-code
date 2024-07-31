@@ -16,7 +16,7 @@ namespace SipmUsb
 
     uint16_t FpgaResults::num_avail_time_slices() const {
         // from Mike's code (sorry about the magic numbers)
-        return (registers[2] & 0xfc00) / 0x400;
+        return (registers[2] >> 9) & 0x7f;
     }
 
     std::vector<ListModeDataPoint> FpgaListMode::parse_list_buffer() const {
