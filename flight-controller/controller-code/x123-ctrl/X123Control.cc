@@ -15,7 +15,13 @@ X123Control::X123Control(DetectorPorts ports) :
     settings_saver{std::make_unique<SettingsSaver>("x123-settings.bin")},
     settings{fetch_settings()}
 {
-    num_histogram_bins_from_ram();
+    // If X-123 is disconnected, set default # bins to 1024
+    try {
+        num_histogram_bins_from_ram();
+    } catch (DetectorException const&) {
+        log_warning("X-123 disconnected; using 1024 bins as default");
+        num_histogram_bins = 1024;
+    }
 }
 
 X123Control::~X123Control() { }
