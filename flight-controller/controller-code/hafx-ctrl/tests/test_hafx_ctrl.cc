@@ -9,7 +9,8 @@
 #include <HafxControl.hh>
 #include <DetectorMessages.hh>
 
-constexpr int base_port = 61900;
+constexpr unsigned short science_port = 30000;
+constexpr unsigned short debug_port = 31000;
 
 std::unique_ptr<Detector::HafxControl> get_test_hafx_ctrl() {
     std::string TEST_SERIAL{"55FD9A8F4A344E5120202041131E05FF"};
@@ -17,7 +18,7 @@ std::unique_ptr<Detector::HafxControl> get_test_hafx_ctrl() {
 
     return std::make_unique<Detector::HafxControl>(
         device_manager.device_map.at(TEST_SERIAL),
-        Detector::DetectorPorts{base_port, base_port + 1}
+        Detector::DetectorPorts{science_port, debug_port}
     );
 }
 
@@ -90,14 +91,70 @@ TEST(HafxCtrl, HistogramSlices) {
      * Controller sends em out via a socket so we just listen on
      * the socket it expects to send data to.
      */
+
+    // Make a socket to receive data on
+    int sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock_fd < 0) {
+        throw std::runtime_error{"can't bind socket"};
+    }
+    auto opts = fcntl(sock_fd, F_GETFL);
+    // Socket doesn't block
+    opts |= O_NONBLOCK;
+    fcntl(sock_fd, F_SETFL, opts);
+
+    socklen_t length = sizeof(sockaddr_in);
+    sockaddr_in addr;
+    std::memset(&addr, 0, length);
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(static_cast<unsigned short>(science_port));
+    addr.sin_addr = in_addr{.s_addr = INADDR_ANY};
+
+    int ret = bind(sock_fd, (sockaddr*)&addr, length);
+    if (ret < 0) {
+        throw std::runtime_error{"cannot bind socket"};
+    }
+
     auto ctrl = get_test_hafx_ctrl();
+    ctrl->data_time_anchor(time(nullptr));
     ctrl->restart_time_slice_or_histogram();
 
-    using namespace std::chrono_literals;
-    std::this_thread::sleep_for(1s);
+    for (int i = 0; i < 10; ++i) {
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(3s);
 
-    // just test saving operation; ignore data output to the socket
-    ctrl->poll_save_time_slice();
+        ctrl->poll_save_time_slice();
+    }
+
+    constexpr size_t BUFFER_SIZE = 16384ULL;
+    auto buffer = std::make_unique<uint8_t[]>(BUFFER_SIZE);
+
+    DetectorMessages::HafxNominalSpectrumStatus nom;
+    constexpr auto nominal_size = sizeof(DetectorMessages::HafxNominalSpectrumStatus);
+    // Receive data until we can't
+    errno = 0;
+    while (errno != EWOULDBLOCK) {
+        int received = recv(sock_fd, buffer.get(), BUFFER_SIZE, 0);
+        if (received < 0) {
+            std::cerr << "error receiving from socket: " << strerror(errno) << std::endl;
+            break;
+        }
+        std::cout << received << std::endl;
+        if (received % nominal_size == 0) {
+            std::cerr << "size is good of data received" << std::endl;
+        }
+
+        // Copy the buffer into structs and print out their 
+        // buffer numbers
+        for (size_t i = 0; i < static_cast<size_t>(received); i += nominal_size) {
+            std::memcpy(&nom, buffer.get() + i, nominal_size);
+
+            std::cerr << "buffer number at index " << i << " is "
+                      << nom.buffer_number << std::endl;
+        }
+    }
+
+
+    close(sock_fd);
 }
 
 TEST(HafxCtrl, DebugCollections) {
@@ -113,6 +170,7 @@ TEST(HafxCtrl, DebugCollections) {
     ctrl->read_save_debug<SipmUsb::ArmStatus>();
     ctrl->read_save_debug<SipmUsb::ArmCal>();
 }
+
 
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
