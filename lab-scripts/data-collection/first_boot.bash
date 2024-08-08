@@ -42,10 +42,10 @@ echo "settings-update hafx x1 fpga_ctrl $fpga_ctrl" > $det_udp_dev
 # These may be extracted with the Bridgeport software
 arm_ctrl='0.0 0.0 1.0 1.0 2.0 0.10000000149011612 23.0 35.380001068115234 9000.0 20000.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0'
 # https://www.bridgeportinstruments.com/products/software/wxMCA_doc/documentation/english/mds/mca3k/mca3k_arm_ctrl.html
-echo "settings-update hafx c1 fpga_ctrl $fpga_ctrl" > $det_udp_dev
-echo "settings-update hafx m1 fpga_ctrl $fpga_ctrl" > $det_udp_dev
-echo "settings-update hafx m5 fpga_ctrl $fpga_ctrl" > $det_udp_dev
-echo "settings-update hafx x1 fpga_ctrl $fpga_ctrl" > $det_udp_dev
+echo "settings-update hafx c1 arm_ctrl $arm_ctrl" > $det_udp_dev
+echo "settings-update hafx m1 arm_ctrl $arm_ctrl" > $det_udp_dev
+echo "settings-update hafx m5 arm_ctrl $arm_ctrl" > $det_udp_dev
+echo "settings-update hafx x1 arm_ctrl $arm_ctrl" > $det_udp_dev
 
 # update the ADC bin mapping
 # this is the custom mapping from 2048 ADC bins to 123 IMPRESS bins
