@@ -222,39 +222,30 @@ class X123Debug:
 
 class HafxDebug:
     # Order matters here (decoding enum)
-    TYPE_MAP = [
-        'arm_ctrl',
-        'arm_cal',
-        'arm_status',
-        'fpga_ctrl',
-        'fpga_statistics',
-        'fpga_weights',
-        'histogram',
-        'listmode',
-    ]
     # Taken from MDS documentation
     # https://www.bridgeportinstruments.com/products/software/wxMCA_doc/documentation/english/mds/mca3k/introduction.html
-    DECODE_MAP = [
-        '<12f',
-        '<64f',
-        '<7f',
-        '<16H',
-        '<16L',
-        '<1024H',
-        '<4096L',
-        '<1024H',
-        # TODO add scope trace
+    TYPE_DECODE_MAP = [
+        ('arm_ctrl', '<12f'),
+        ('arm_cal', '<64f'),
+        ('arm_status', '<7f'),
+        ('fpga_ctrl', '<16H'),
+        ('fpga_oscilloscope_trace', '<1024H'),
+        ('fpga_statistics', '<16L'),
+        ('fpga_weights', '<1024H'),
+        ('histogram', '<4096L'),
+        ('listmode', '<1024H'),
     ]
-        
 
     def __init__(self, debug_type: int, debug_bytes: bytes):
         self.type = debug_type
         self.bytes = debug_bytes
 
     def decode(self) -> dict[str, object]:
+        type_, unpack_str = TYPE_DECODE_MAP[self.type]
         return {
-            'type': HafxDebug.TYPE_MAP[self.type],
-            'registers': list(struct.unpack(
-                HafxDebug.DECODE_MAP[self.type], self.bytes))
+            'type': type_,
+            'registers': list(
+                struct.unpack(unpack_str, self.bytes)
+            )
         }
 
