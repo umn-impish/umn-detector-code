@@ -41,6 +41,7 @@ namespace DetectorMessages {
             ArmCal,
             ArmStatus,
             FpgaCtrl,
+            FpgaOscilloscopeTrace,
             FpgaStatistics,
             FpgaWeights,
             Histogram,

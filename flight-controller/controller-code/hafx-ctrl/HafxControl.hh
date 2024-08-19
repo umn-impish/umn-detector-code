@@ -72,6 +72,7 @@ void HafxControl::read_save_debug() {
         {typeid(SipmUsb::FpgaHistogram), dbt::Type::Histogram},
         {typeid(SipmUsb::FpgaWeights), dbt::Type::FpgaWeights},
         {typeid(SipmUsb::FpgaStatistics), dbt::Type::FpgaStatistics},
+        {typeid(SipmUsb::FpgaOscilloscopeTrace), dbt::Type::FpgaOscilloscopeTrace},
         {typeid(SipmUsb::FpgaCtrl), dbt::Type::FpgaCtrl},
         {typeid(SipmUsb::ArmStatus), dbt::Type::ArmStatus},
         {typeid(SipmUsb::ArmCal), dbt::Type::ArmCal},

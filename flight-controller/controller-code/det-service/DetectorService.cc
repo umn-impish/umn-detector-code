@@ -255,19 +255,20 @@ void DetectorService::handle_command(dm::HafxDebug cmd) {
     auto& ctrl = hafx_ctrl.at(cmd.ch);
 
     auto delay = std::chrono::seconds(cmd.wait_between);
-    // basic reads
-    if (acq_type == dbr_t::Type::ArmCtrl)
-        ctrl->read_save_debug<SipmUsb::ArmCtrl>();
-    else if (acq_type == dbr_t::Type::ArmCal)
-        ctrl->read_save_debug<SipmUsb::ArmCal>();
-    else if (acq_type == dbr_t::Type::ArmStatus)
-        ctrl->read_save_debug<SipmUsb::ArmStatus>();
-    else if (acq_type == dbr_t::Type::FpgaCtrl)
-        ctrl->read_save_debug<SipmUsb::FpgaCtrl>();
-    else if (acq_type == dbr_t::Type::FpgaStatistics)
-        ctrl->read_save_debug<SipmUsb::FpgaStatistics>();
-    else if (acq_type == dbr_t::Type::FpgaWeights)
-        ctrl->read_save_debug<SipmUsb::FpgaWeights>();
+
+    // Make a macro to keep this more easily updated
+    #define BASIC_READ(tname) \
+        if (acq_type == dbr_t::Type::tname) \
+            { ctrl->read_save_debug<SipmUsb::tname>(); }
+    BASIC_READ(ArmCtrl)
+    else BASIC_READ(ArmCal)
+    else BASIC_READ(ArmStatus)
+    else BASIC_READ(FpgaCtrl)
+    else BASIC_READ(FpgaOscilloscopeTrace)
+    else BASIC_READ(FpgaStatistics)
+    else BASIC_READ(FpgaWeights)
+    // Delete the macro to not pollute other things
+    #undef BASIC_READ
 
     // reads after a delay
     else if (acq_type == dbr_t::Type::Histogram) {
