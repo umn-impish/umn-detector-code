@@ -21,6 +21,7 @@ public:
 
     void restart_time_slice_or_histogram();
     void restart_list();
+    void restart_trace();
     void poll_save_time_slice();
 
     // debug, settings

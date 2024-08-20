@@ -84,7 +84,7 @@ namespace DetectorMessages {
     struct CollectNominal { bool started = false; };
     struct StopNominal { };
     struct CollectNrlListMode { bool started = false; };
-
+    struct QueryTraceAcquisition { DetectorMessages::HafxChannel ch; };
     struct QueryLegacyHistogram { DetectorMessages::HafxChannel ch; };
     struct QueryListMode { DetectorMessages::HafxChannel ch; };
     struct QueryX123DebugHistogram { };

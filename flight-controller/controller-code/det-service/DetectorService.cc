@@ -264,13 +264,18 @@ void DetectorService::handle_command(dm::HafxDebug cmd) {
     else BASIC_READ(ArmCal)
     else BASIC_READ(ArmStatus)
     else BASIC_READ(FpgaCtrl)
-    else BASIC_READ(FpgaOscilloscopeTrace)
     else BASIC_READ(FpgaStatistics)
     else BASIC_READ(FpgaWeights)
     // Delete the macro to not pollute other things
     #undef BASIC_READ
 
     // reads after a delay
+    else if (acq_type == dbr_t::Type::FpgaOscilloscopeTrace) {
+        ctrl->restart_trace();
+        hafx_debug_trace_timer = TimerLifetime::create(
+            queue.push_delay(dm::QueryTraceAcquisition{cmd.ch}, delay)
+        );
+    }
     else if (acq_type == dbr_t::Type::Histogram) {
         ctrl->restart_time_slice_or_histogram();
         hafx_debug_hist_timer = TimerLifetime::create(
@@ -320,6 +325,11 @@ void DetectorService::x123_debug(dm::X123Debug cmd) {
         log_debug("ascii is: " + cmd.ascii_settings_query);
         x123_ctrl->read_save_debug_ascii(cmd.ascii_settings_query);
     }
+}
+
+void DetectorService::handle_command(dm::QueryTraceAcquisition cmd) {
+    using trace_t = SipmUsb::FpgaOscilloscopeTrace;
+    hafx_ctrl.at(cmd.ch)->read_save_debug<trace_t>();
 }
 
 void DetectorService::handle_command(dm::QueryListMode cmd) {

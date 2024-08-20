@@ -108,7 +108,7 @@ namespace SipmUsb
         // bits mean:
         0b1111, // clear everything
         0,      // unused
-        0b1000, // enable list mode
+        0b0100, // enable list mode
         0       // unused
     };
     static constexpr FpgaAction FPGA_ACTION_START_NEW_HISTOGRAM_ACQUISITION = {
@@ -116,6 +116,14 @@ namespace SipmUsb
         0b1111, // clear everything
         0,      // unused
         0b0001, // enable histogram mode
+        0       // unused
+    };
+
+    static constexpr FpgaAction FPGA_ACTION_START_NEW_TRACE_ACQUISITION = {
+        // bits mean:
+        0b0100, // clear trace
+        0,      // unused
+        0b0010, // enable trace mode
         0       // unused
     };
 
