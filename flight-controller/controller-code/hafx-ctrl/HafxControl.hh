@@ -21,6 +21,7 @@ public:
 
     void restart_time_slice_or_histogram();
     void restart_list();
+    void restart_trace();
     void poll_save_time_slice();
 
     // debug, settings
@@ -72,6 +73,7 @@ void HafxControl::read_save_debug() {
         {typeid(SipmUsb::FpgaHistogram), dbt::Type::Histogram},
         {typeid(SipmUsb::FpgaWeights), dbt::Type::FpgaWeights},
         {typeid(SipmUsb::FpgaStatistics), dbt::Type::FpgaStatistics},
+        {typeid(SipmUsb::FpgaOscilloscopeTrace), dbt::Type::FpgaOscilloscopeTrace},
         {typeid(SipmUsb::FpgaCtrl), dbt::Type::FpgaCtrl},
         {typeid(SipmUsb::ArmStatus), dbt::Type::ArmStatus},
         {typeid(SipmUsb::ArmCal), dbt::Type::ArmCal},

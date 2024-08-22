@@ -77,20 +77,10 @@ namespace SipmUsb
     // as of 2023 it is 64 registers. weird
     // LEAVE IT AS 16!!!!!
     using ArmCtrl = ArmIoContainer<float, 64, 2>;
-    static constexpr ArmCtrl ARM_CTRL_LM_OPTIMIZED {
-        0.0, 0.0, 1.0, 27.0, 1.0, 0.10000000149011612, 25.0,
-        34.0, 4800.0, 20000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    };
 
     using ArmCal = ArmIoContainer<float, 64, 3>;
 
     using FpgaCtrl = FpgaIoContainer<uint16_t, 16, 0>;
-    static constexpr FpgaCtrl FPGA_CTRL_LM_OPTIMIZED_REGISTERS = {
-        17800, 20, 34, 72, 60, 65280, 100, 1092, 0, 0, 0, 0, 3906, 0, 33008, 32768,
-    };
 
     using FpgaStatistics = FpgaIoContainer<uint32_t, 16, 1>;
 
@@ -118,7 +108,7 @@ namespace SipmUsb
         // bits mean:
         0b1111, // clear everything
         0,      // unused
-        0b1000, // enable list mode
+        0b0100, // enable list mode
         0       // unused
     };
     static constexpr FpgaAction FPGA_ACTION_START_NEW_HISTOGRAM_ACQUISITION = {
@@ -126,6 +116,14 @@ namespace SipmUsb
         0b1111, // clear everything
         0,      // unused
         0b0001, // enable histogram mode
+        0       // unused
+    };
+
+    static constexpr FpgaAction FPGA_ACTION_START_NEW_TRACE_ACQUISITION = {
+        // bits mean:
+        0b0100, // clear trace
+        0,      // unused
+        0b0010, // enable trace mode
         0       // unused
     };
 

@@ -132,6 +132,7 @@ or a histogram or list mode acquisition.
     - `arm_cal`
     - `arm_status`
     - `fpga_ctrl`
+    - `fpga_oscilloscope_trace`
     - `fpga_statistics`
     - `fpga_weights`
     - `histogram`

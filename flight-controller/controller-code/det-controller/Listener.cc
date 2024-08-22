@@ -246,9 +246,10 @@ DetectorMessages::DetectorCommand Listener::hafx_debug() {
         cmd_stream >> wait;
     }
 
-    bool do_wait = 
+    bool do_wait = (
         type == "histogram" || type == "list_mode" ||
-        type == "nrl_list_mode" || type == "time_slice";
+        type == "nrl_list_mode" || type == "time_slice"
+    );
     if (do_wait && (wait == 0 || wait > MAX_WAIT_TIME_SEC)) {
         log_debug("maybe waiting for " + std::to_string(wait));
         throw DetectorException{
@@ -257,14 +258,15 @@ DetectorMessages::DetectorCommand Listener::hafx_debug() {
 
     using dbg_t = DetectorMessages::HafxDebug;
     dbg_t::Type t;
-         if (type == "arm_ctrl"       ) t = dbg_t::Type::ArmCtrl;
-    else if (type == "arm_cal"        ) t = dbg_t::Type::ArmCal;
-    else if (type == "arm_status"     ) t = dbg_t::Type::ArmStatus;
-    else if (type == "fpga_ctrl"      ) t = dbg_t::Type::FpgaCtrl;
-    else if (type == "fpga_statistics") t = dbg_t::Type::FpgaStatistics;
-    else if (type == "fpga_weights"   ) t = dbg_t::Type::FpgaWeights;
-    else if (type == "histogram"      ) t = dbg_t::Type::Histogram;
-    else if (type == "list_mode"      ) t = dbg_t::Type::ListMode;
+         if (type == "arm_ctrl"               ) t = dbg_t::Type::ArmCtrl;
+    else if (type == "arm_cal"                ) t = dbg_t::Type::ArmCal;
+    else if (type == "arm_status"             ) t = dbg_t::Type::ArmStatus;
+    else if (type == "fpga_ctrl"              ) t = dbg_t::Type::FpgaCtrl;
+    else if (type == "fpga_oscilloscope_trace") t = dbg_t::Type::FpgaOscilloscopeTrace;
+    else if (type == "fpga_statistics"        ) t = dbg_t::Type::FpgaStatistics;
+    else if (type == "fpga_weights"           ) t = dbg_t::Type::FpgaWeights;
+    else if (type == "histogram"              ) t = dbg_t::Type::Histogram;
+    else if (type == "list_mode"              ) t = dbg_t::Type::ListMode;
     else throw DetectorException{"Ill-formed debug request type '" + type + "'"};
 
     dbg.type = t;

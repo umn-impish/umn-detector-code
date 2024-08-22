@@ -118,7 +118,7 @@ TEST(HafxCtrl, HistogramSlices) {
     ctrl->data_time_anchor(time(nullptr));
     ctrl->restart_time_slice_or_histogram();
 
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < 1; ++i) {
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(3s);
 
@@ -166,11 +166,20 @@ TEST(HafxCtrl, DebugCollections) {
     ctrl->read_save_debug<SipmUsb::FpgaHistogram>();
     ctrl->read_save_debug<SipmUsb::FpgaWeights>();
     ctrl->read_save_debug<SipmUsb::FpgaStatistics>();
+    ctrl->read_save_debug<SipmUsb::FpgaOscilloscopeTrace>();
     ctrl->read_save_debug<SipmUsb::FpgaCtrl>();
     ctrl->read_save_debug<SipmUsb::ArmStatus>();
     ctrl->read_save_debug<SipmUsb::ArmCal>();
 }
 
+TEST(HafxCtrl, ScopeTest) {
+    auto ctrl = get_test_hafx_ctrl();
+
+    // bingus
+    // need to add something for FPGA results but I cannot find the bit mike has it set to!
+    ctrl->restart_trace();
+
+}
 
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);

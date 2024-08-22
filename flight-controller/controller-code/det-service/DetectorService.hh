@@ -27,6 +27,7 @@ public:
         DetectorMessages::HafxDebug,
         DetectorMessages::X123Debug,
         DetectorMessages::QueryListMode,
+        DetectorMessages::QueryTraceAcquisition,
         DetectorMessages::QueryLegacyHistogram,
         DetectorMessages::QueryX123DebugHistogram,
 
@@ -77,6 +78,7 @@ private:
     // timers
     std::unique_ptr<TimerLifetime> nominal_timer;
     std::unique_ptr<TimerLifetime> health_timer;
+    std::unique_ptr<TimerLifetime> hafx_debug_trace_timer;
     std::unique_ptr<TimerLifetime> hafx_debug_hist_timer;
     std::unique_ptr<TimerLifetime> hafx_debug_list_timer;
     std::unique_ptr<TimerLifetime> x123_debug_hist_timer;
@@ -88,6 +90,7 @@ private:
     void handle_command(DetectorMessages::X123Settings cmd);
     void handle_command(DetectorMessages::HafxDebug cmd);
     void handle_command(DetectorMessages::X123Debug cmd);
+    void handle_command(DetectorMessages::QueryTraceAcquisition cmd);
     void handle_command(DetectorMessages::QueryLegacyHistogram cmd);
     void handle_command(DetectorMessages::QueryListMode cmd);
     void handle_command(DetectorMessages::QueryX123DebugHistogram cmd);

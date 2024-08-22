@@ -56,6 +56,10 @@ void HafxControl::restart_list() {
     driver->write(FPGA_ACTION_START_NEW_LIST_ACQUISITION, MemoryType::ram);
 }
 
+void HafxControl::restart_trace() {
+    using namespace SipmUsb;
+    driver->write(FPGA_ACTION_START_NEW_TRACE_ACQUISITION, MemoryType::ram);
+}
 
 std::optional<time_t> HafxControl::data_time_anchor() {
     return science_time_anchor;
