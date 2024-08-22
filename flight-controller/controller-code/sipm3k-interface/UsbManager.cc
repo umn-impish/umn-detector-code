@@ -85,6 +85,12 @@ BridgeportDeviceManager::BridgeportDeviceManager() {
             device_map[usb_manager->get_arm_serial()] = usb_manager;
         }
     }
+    log_debug("Serial numbers available");
+    for (const auto& pair : device_map) {
+        std::stringstream sn;
+        sn << "serial number: " << pair.first;
+        log_debug(sn.str());
+    }
 }
 
 }
