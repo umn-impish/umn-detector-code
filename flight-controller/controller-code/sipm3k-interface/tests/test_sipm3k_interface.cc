@@ -90,6 +90,24 @@ TEST(sipm3k, TimeSliceRead) {
     EXPECT_LE(buff_num, 256) << "buffer number was crap data";
 }
 
+TEST(sipm3k, TraceDone) {
+    using namespace SipmUsb;
+    auto driv = get_usb_manager();
+    
+    auto restart_regs = FPGA_ACTION_START_NEW_TRACE_ACQUISITION;
+    driv->write(restart_regs, MemoryType::ram);
+
+    using namespace std::chrono_literals;
+    std::this_thread::sleep_for(1s);
+
+    FpgaResults res{};
+
+    driv->read(res, MemoryType::ram);
+    auto trace_done = res.trace_done();
+
+    EXPECT_EQ(1, trace_done) << "Trace did not complete in 1 second";
+}
+
 // TODO add more tests for each container
 // maybe template?
 

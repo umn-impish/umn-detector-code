@@ -329,7 +329,14 @@ void DetectorService::x123_debug(dm::X123Debug cmd) {
 
 void DetectorService::handle_command(dm::QueryTraceAcquisition cmd) {
     using trace_t = SipmUsb::FpgaOscilloscopeTrace;
-    hafx_ctrl.at(cmd.ch)->read_save_debug<trace_t>();
+    
+    uint16_t trace_done = hafx_ctrl.at(cmd.ch)->check_trace_done();
+
+    if (trace_done) {
+        hafx_ctrl.at(cmd.ch)->read_save_debug<trace_t>();
+    } else {
+        log_error("Trace did not complete before save attempt");
+    }
 }
 
 void DetectorService::handle_command(dm::QueryListMode cmd) {

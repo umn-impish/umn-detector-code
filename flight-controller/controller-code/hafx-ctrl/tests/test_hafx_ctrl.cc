@@ -13,7 +13,7 @@ constexpr unsigned short science_port = 30000;
 constexpr unsigned short debug_port = 31000;
 
 std::unique_ptr<Detector::HafxControl> get_test_hafx_ctrl() {
-    std::string TEST_SERIAL{"55FD9A8F4A344E5120202041131E05FF"};
+    std::string TEST_SERIAL{"AB28CB7F4A344E51202020382E2B0BFF"};
     SipmUsb::BridgeportDeviceManager device_manager;
 
     return std::make_unique<Detector::HafxControl>(
@@ -170,15 +170,6 @@ TEST(HafxCtrl, DebugCollections) {
     ctrl->read_save_debug<SipmUsb::FpgaCtrl>();
     ctrl->read_save_debug<SipmUsb::ArmStatus>();
     ctrl->read_save_debug<SipmUsb::ArmCal>();
-}
-
-TEST(HafxCtrl, ScopeTest) {
-    auto ctrl = get_test_hafx_ctrl();
-
-    // bingus
-    // need to add something for FPGA results but I cannot find the bit mike has it set to!
-    ctrl->restart_trace();
-
 }
 
 int main(int argc, char *argv[]) {
