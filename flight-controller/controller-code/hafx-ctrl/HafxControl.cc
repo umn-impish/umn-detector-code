@@ -215,7 +215,7 @@ void HafxControl::update_registers(SourceT const& source_regs) {
     for (size_t i = 0; i < con.registers.size(); ++i) {
         con.registers[i] = source_regs[i];
     }
-    driver->write(con, SipmUsb::MemoryType::ram);
+    driver->write(con, SipmUsb::MemoryType::nvram);
 }
 
 } // namespace Detector
