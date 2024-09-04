@@ -131,6 +131,14 @@ Listener::receive_decode_msg() {
         return DetectorMessages::StopNominal {};
     }
 
+    else if (cmd_name == "start-nrl-list") {
+        return DetectorMessages::StartNrlList {};
+    }
+
+    else if (cmd_name == "stop-nrl-list") {
+        return DetectorMessages::StopNrlList {};
+    }
+
     else if (cmd_name == "settings-update") {
         return settings_update();
     }

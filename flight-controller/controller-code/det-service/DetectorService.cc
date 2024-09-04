@@ -453,12 +453,29 @@ void DetectorService::handle_command(dm::StopNominal) {
 
 // TODO: NRL LIST MODE
 
+void DetectorService::handle_command(dm::StartNrlList) {
+    // TODO, finish this
+    for (auto& [ch, ctrl] : hafx_ctrl) {
+        ctrl->restart_nrl_list_or_list_mode();
+    }
+}
+
+void DetectorService::handle_command(dm::StopNrlList) {
+    // TODO, this
+    // hmmm no x123 for this. soooo
+    hafx_nrl_list_timer = nullptr;
+}
+
 void DetectorService::push_message(DetectorService::Message m) {
     queue.push(std::move(m));
 
 }
 bool DetectorService::taking_nominal_data() {
     return (nominal_timer != nullptr);
+}
+
+bool DetectorService::taking_nrl_data() {
+    return (hafx_nrl_list_timer != nullptr);
 }
 
 bool DetectorService::alive() const {

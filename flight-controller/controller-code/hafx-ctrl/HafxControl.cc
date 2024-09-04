@@ -51,7 +51,7 @@ void HafxControl::restart_time_slice_or_histogram() {
     driver->write(FPGA_ACTION_START_NEW_HISTOGRAM_ACQUISITION, MemoryType::ram);
 }
 
-void HafxControl::restart_list() {
+void HafxControl::restart_nrl_list_or_list_mode() {
     using namespace SipmUsb;
     driver->write(FPGA_ACTION_START_NEW_LIST_ACQUISITION, MemoryType::ram);
 }
@@ -128,6 +128,47 @@ HafxControl::read_time_slice() {
     }
 
     return ret;
+}
+
+void HafxControl::swap_to_buffer_0() {
+    DetectorMessages::HafxDebug::Type::FpgaCtrl dbgc;
+    driver->read(dbgc, SipmUsb::MemoryType::ram);
+    const auto& buf = dbgc.registers;
+
+    std::cerr << buf << std::endl;
+}
+
+void HafxControl::swap_to_buffer_1() {
+    DetectorMessages::HafxDebug::Type::FpgaCtrl dbgc;
+    driver->read(dbgc, SipmUsb::MemoryType::ram);
+    const auto& buf = dbgc.registers;
+
+    std::cerr << buf << std::endl;
+
+    // after editing registers (somehow)
+
+    update_registers(dbgc);
+}
+
+void HafxControl::poll_save_nrl_list() {
+    using namespace SipmUsb;
+
+    FpgaResults fpga_res_con;
+    driver->read(fpga_res_con, MemoryType::ram);
+    // check if buffers are full
+    bool full_0 = static_cast<bool>fpga_res_con.full_0();
+    bool full_1 = static_cast<bool>fpga_res_con.full_1();
+    
+    // buffer 0 full
+    if (full_0) {
+        // TODO, swap buffers and save
+        swap_to_buffer_0();
+    }
+    // buffer 1 full
+    if (full_1) {
+        // TODO, swap buffers and save
+        swap_to_buffer_1();
+    }
 }
 
 void HafxControl::update_settings(const DetectorMessages::HafxSettings& new_settings) {

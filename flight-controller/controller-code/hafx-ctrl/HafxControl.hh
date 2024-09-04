@@ -23,6 +23,9 @@ public:
     void restart_list();
     void restart_trace();
     uint16_t check_trace_done();
+    uint16_t poll_save_nrl_list();
+    void swap_to_buffer_0();
+    void swap_to_buffer_1();
     void poll_save_time_slice();
 
     // debug, settings

@@ -82,6 +82,7 @@ private:
     std::unique_ptr<TimerLifetime> hafx_debug_hist_timer;
     std::unique_ptr<TimerLifetime> hafx_debug_list_timer;
     std::unique_ptr<TimerLifetime> x123_debug_hist_timer;
+    std::unique_prt<TimerLifetime> hafx_nrl_list_timer;
 
     // command handlers
     void handle_command(DetectorMessages::Initialize cmd);
@@ -98,6 +99,8 @@ private:
     void handle_command(DetectorMessages::StartPeriodicHealth cmd);
     void handle_command(DetectorMessages::StopPeriodicHealth cmd);
     void handle_command(DetectorMessages::CollectNominal cmd);
+    void handle_command(DetectorMessages::StartNrlList cmd);
+    void handle_command(DetectorMessages::StopNrlList cmd);
     void handle_command(DetectorMessages::PromiseWrap msg);
 
     // implementations & helpers for `handle_command`s

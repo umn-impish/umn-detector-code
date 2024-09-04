@@ -23,6 +23,16 @@ namespace SipmUsb
         // from Mike's code (sorry about the magic numbers)
         return (registers[2] >> 9) & 0x7f;
     }
+    
+    uint16_t FpgaResults::full_0() const {
+        // from BPI code, full_0 is in results register ( registers[2] ) bit 1 (2^1 = 2)
+        return (registers[2] & 2);
+    }
+    
+    uint16_t FpgaResults::full_1() const {
+        // from BPI code, full_1 is in results register ( registers[2] ) bit 3 (2^3 = 8)
+        return (register[2] & 8);
+    }
 
     std::vector<ListModeDataPoint> FpgaListMode::parse_list_buffer() const {
         std::vector<ListModeDataPoint> ret;
@@ -63,5 +73,12 @@ namespace SipmUsb
         }
 
         return ret;
+    }
+
+    DecodedListBuffer FpgaListBuffer::decode() const {
+        DecodedListBuffer ret{
+            // TODO, this
+            // I have no idea how this will read out (kms)
+        }
     }
 }

@@ -151,6 +151,8 @@ namespace DetectorMessages {
         Shutdown,
         CollectNominal,
         StopNominal,
+        StartNrlList,
+        StopNrlList,
         X123Settings,
         HafxSettings,
         HafxDebug,
@@ -177,4 +179,8 @@ namespace DetectorMessages {
         uint32_t time_anchor;
         bool missed_pps;
     };
+
+    struct __attribute__((packed)) HafxNrlListStatus {
+        // TODO, figure out list mode format for this
+    }
 }

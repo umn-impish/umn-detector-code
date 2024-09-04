@@ -87,6 +87,8 @@ namespace SipmUsb
     struct FpgaResults : public FpgaIoContainer<uint16_t, 16, 2> {
         uint16_t trace_done() const;
         uint16_t num_avail_time_slices() const;
+        uint16_t full_0() const;
+        uint16_t full_1() const;
     };
 
     using FpgaHistogram = FpgaIoContainer<uint32_t, 4096, 3>;
@@ -138,6 +140,24 @@ namespace SipmUsb
     };
     struct FpgaTimeSlice : public FpgaIoContainer<uint16_t, 128, 8> {
         DecodedTimeSlice decode() const;
+    };
+
+    struct DecodedListBuffer {
+        uint8_t psd1;
+        uint8_t psd2;
+        uint8_t energy1;
+        uint8_t energy2;
+        uint8_t wc1;
+        uint8_t wc2;
+        uint8_t wc3;
+        uint8_t wc4;
+        uint8_t wc5;
+        uint8_t wc6;
+        uint8_t wc7_flags;
+    };
+    struct FpgaListBuffer : public FpgaIoContainer<uint8_t, 11, 9> {
+        DecodedListBuffer decode() const;
+        // TODO, find out what the List mode data format is
     };
 
     using FpgaMap = FpgaIoContainer<uint16_t, 2048, 8>;
