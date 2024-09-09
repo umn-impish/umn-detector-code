@@ -15,6 +15,7 @@ HafxControl::HafxControl(std::shared_ptr<SipmUsb::UsbManager> driver_, DetectorP
                   QueuedDataSaver<
                   DetectorMessages::HafxNominalSpectrumStatus> >(
                   ports.science, SLICES_PER_SECOND)},
+    nrl_data_saver{std::make_unique<DataSaver>(ports.science)}, // will need different udp capture flags than time slice nominal
     debug_saver{std::make_unique<DataSaver>(ports.debug)}
 { }
 
@@ -131,23 +132,59 @@ HafxControl::read_time_slice() {
 }
 
 void HafxControl::swap_to_buffer_0() {
-    DetectorMessages::HafxDebug::Type::FpgaCtrl dbgc;
-    driver->read(dbgc, SipmUsb::MemoryType::ram);
-    const auto& buf = dbgc.registers;
+    using namespace SipmUsb;
 
-    std::cerr << buf << std::endl;
+    // container
+    FpgaCtrl cont;
+    // read out current Fpga Ctrl registers
+    driver->read(cont, MemoryType::nvram);
+    
+    // check if in buffer 1
+    if (cont.registers[15] & 0x4) {
+        cont.registers[15] = cont.registers[15] & ~(0x4);
+    } else {
+        log_debug("Tried to swap to buffer 0 but was already in buffer 0");
+        return;
+    }
+    // send new fpga ctrl (tells it to swap to buffer 0)
+    driver->write(cont, MemoryType::nvram);
 }
 
 void HafxControl::swap_to_buffer_1() {
-    DetectorMessages::HafxDebug::Type::FpgaCtrl dbgc;
-    driver->read(dbgc, SipmUsb::MemoryType::ram);
-    const auto& buf = dbgc.registers;
+    using namespace SipmUsb;
+    // container
+    FpgaCtrl cont;
+    // read out current Fpga Ctrl registers
+    driver->read(cont, MemoryType::nvram);
+    
+    // check if in buffer 0 (registers[15] bit 2)
+    if ((cont.registers[15] & 0x4) == 0) {
+        cont.registers[15] = cont.registers[15] | 0x4;
+    } else {
+        log_debug("Tried to swap to buffer 1 but was already in buffer 1");
+        return;
+    }
+    std::cerr << cont.registers[15] << std::endl;
+    // send new fpga ctrl (tells it to swap to buffer 1)
+    driver->write(cont, MemoryType::nvram);
+}
 
-    std::cerr << buf << std::endl;
+DetectorMessages::HafxNrlListStatus 
+HafxControl::read_buffer() {
+    using namespace SipmUsb;
 
-    // after editing registers (somehow)
+    FpgaLmNrl1 NrlBuff;
+    driver->read(NrlBuff, MemoryType::ram);
+    const auto decodedNrl = NrlBuff.decode();
+    DetectorMessages::HafxNrlListStatus ret{};
+    ret.psd = decodedNrl.psd;
+    ret.energy = decodedNrl.energy;
+    ret.wc0 = decodedNrl.wc0;
+    ret.wc1 = decodedNrl.wc1;
+    ret.wc2 = decodedNrl.wc2;
+    ret.wc3af = decodedNrl.wc3af;
 
-    update_registers(dbgc);
+    return ret;
 }
 
 void HafxControl::poll_save_nrl_list() {
@@ -155,19 +192,29 @@ void HafxControl::poll_save_nrl_list() {
 
     FpgaResults fpga_res_con;
     driver->read(fpga_res_con, MemoryType::ram);
-    // check if buffers are full
-    bool full_0 = static_cast<bool>fpga_res_con.full_0();
-    bool full_1 = static_cast<bool>fpga_res_con.full_1();
+    // to check if buffers are full
+    bool full_0 = fpga_res_con.full_0();
+    bool full_1 = fpga_res_con.full_1();
     
     // buffer 0 full
     if (full_0) {
         // TODO, swap buffers and save
         swap_to_buffer_0();
+
+        auto read_out = read_buffer();
+        std::stringstream to_save;
+        to_save.write(reinterpret_cast<char const*>(&read_out), sizeof(read_out));
+        nrl_data_saver->add(to_save.str());
     }
     // buffer 1 full
     if (full_1) {
         // TODO, swap buffers and save
         swap_to_buffer_1();
+        
+        auto read_out = read_buffer();
+        std::stringstream to_save;
+        to_save.write(reinterpret_cast<char const*>(&read_out), sizeof(read_out));
+        nrl_data_saver->add(to_save.str());
     }
 }
 

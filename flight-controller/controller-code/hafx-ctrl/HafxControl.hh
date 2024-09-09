@@ -20,10 +20,10 @@ public:
     generate_health();
 
     void restart_time_slice_or_histogram();
-    void restart_list();
+    void restart_nrl_list_or_list_mode();
     void restart_trace();
     uint16_t check_trace_done();
-    uint16_t poll_save_nrl_list();
+    void poll_save_nrl_list();
     void swap_to_buffer_0();
     void swap_to_buffer_1();
     void poll_save_time_slice();
@@ -47,10 +47,14 @@ private:
 
     using science_t = DetectorMessages::HafxNominalSpectrumStatus;
     std::unique_ptr<QueuedDataSaver<science_t> > science_saver;
+    std::unique_ptr<DataSaver> nrl_data_saver;
     std::unique_ptr<DataSaver> debug_saver;
 
     DetectorMessages::HafxNominalSpectrumStatus
     read_time_slice();
+
+    DetectorMessages::HafxNrlListStatus
+    read_buffer();
 
     void save_settings(const DetectorMessages::HafxSettings& settings);
     void send_off_settings();

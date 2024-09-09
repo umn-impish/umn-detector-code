@@ -60,6 +60,10 @@ void DetectorService::evt_loop_step() {
                     push_message(dm::StopNominal{});
                     push_message(dm::CollectNominal{.started = false});
                 }
+                if (taking_nrl_data()) {
+                    push_message(dm::StopNrlList{});
+                    push_message(dm::StartNrlList{.started = false});
+                }
             }
         }
         catch (const std::exception& e) {
@@ -283,7 +287,7 @@ void DetectorService::handle_command(dm::HafxDebug cmd) {
         );
     }
     else if (acq_type == dbr_t::Type::ListMode) {
-        ctrl->restart_list();
+        ctrl->restart_nrl_list_or_list_mode();
         hafx_debug_list_timer = TimerLifetime::create(
             queue.push_delay(dm::QueryListMode{cmd.ch}, delay)
         );
@@ -453,16 +457,45 @@ void DetectorService::handle_command(dm::StopNominal) {
 
 // TODO: NRL LIST MODE
 
-void DetectorService::handle_command(dm::StartNrlList) {
-    // TODO, finish this
+void DetectorService::check_and_save_list_buffer() {
+    for (const auto& [ch, ctrl] : hafx_ctrl) {
+        try {
+            ctrl->poll_save_nrl_list();
+        }
+        catch (std::runtime_error const& e) {
+            throw ReconnectDetectors{"hafx issue: " + std::string{e.what()}};
+        }
+    }
+}
+
+void DetectorService::start_nrl_list_mode() {
+    await_pps_edge();
+    // wait for pps before starting because its pretty cool to do that B)
     for (auto& [ch, ctrl] : hafx_ctrl) {
         ctrl->restart_nrl_list_or_list_mode();
     }
 }
 
+void DetectorService::handle_command(dm::StartNrlList cmd) {
+    // copied format from Time slice stuff above
+    auto finish = [this](auto cmd) {
+        constexpr auto CHECK_BUFFER_FULL_DELAY = 250ms;
+        hafx_nrl_list_timer = TimerLifetime::create(queue.push_delay(cmd, CHECK_BUFFER_FULL_DELAY));
+    };
+
+    if (not cmd.started) {
+        start_nrl_list_mode();
+        cmd.started = true;
+        finish(cmd);
+        return;
+    }
+
+    check_and_save_list_buffer();
+    finish(cmd);
+}
+
+
 void DetectorService::handle_command(dm::StopNrlList) {
-    // TODO, this
-    // hmmm no x123 for this. soooo
     hafx_nrl_list_timer = nullptr;
 }
 

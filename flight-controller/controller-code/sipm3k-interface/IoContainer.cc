@@ -31,7 +31,7 @@ namespace SipmUsb
     
     uint16_t FpgaResults::full_1() const {
         // from BPI code, full_1 is in results register ( registers[2] ) bit 3 (2^3 = 8)
-        return (register[2] & 8);
+        return (registers[2] & 8);
     }
 
     std::vector<ListModeDataPoint> FpgaListMode::parse_list_buffer() const {
@@ -75,10 +75,47 @@ namespace SipmUsb
         return ret;
     }
 
-    DecodedListBuffer FpgaListBuffer::decode() const {
-        DecodedListBuffer ret{
-            // TODO, this
-            // I have no idea how this will read out (kms)
+    DecodedListBuffer FpgaLmNrl1::decode() const {
+        // this is not complete, need to figure out how to implment that magic python method
+
+        uint32_t number_events = registers[0] & 0xFFF;
+        uint32_t E0 = number_events * 6; // idk why mike calls it this, but it is the length length of the registers array in uint16_t's
+
+        std::vector<uint16_t> psd_cont(2048); // containers for ret values
+        std::vector<uint16_t> energy_cont(2048);
+        std::vector<uint16_t> wc0_cont(2048);
+        std::vector<uint16_t> wc1_cont(2048);
+        std::vector<uint16_t> wc2_cont(2048);
+        std::vector<uint16_t> wc3af_cont(2048);
+
+        for (size_t i = 6; i < E0; i += 6) {
+            psd_cont.push_back(registers[i]);
         }
+        for (size_t i = 7; i < E0; i += 6) {
+            energy_cont.push_back(registers[i]);
+        }
+        for (size_t i = 8; i < E0; i += 6) {
+            wc0_cont.push_back(registers[i]);
+        }
+        for (size_t i = 9; i < E0; i += 6) {
+            wc1_cont.push_back(registers[i]);
+        }
+        for (size_t i = 10; i < E0; i += 6) {
+            wc2_cont.push_back(registers[i]);
+        }
+        for (size_t i = 11; i < E0; i += 6) {
+            wc3af_cont.push_back(registers[i]); // the last 8 bits will be 0s no matter what (padding!) bits 0-2 are wc3 and 3-7 are flags
+        }
+
+        DecodedListBuffer ret{
+            psd_cont,
+            energy_cont,
+            wc0_cont,
+            wc1_cont,
+            wc2_cont,
+            wc3af_cont
+        };
+
+        return ret;
     }
 }

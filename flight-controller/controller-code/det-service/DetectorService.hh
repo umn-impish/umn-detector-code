@@ -35,11 +35,14 @@ public:
         DetectorMessages::StopPeriodicHealth,
         DetectorMessages::CollectNominal,
         DetectorMessages::StopNominal,
+        DetectorMessages::StartNrlList,
+        DetectorMessages::StopNrlList,
         DetectorMessages::PromiseWrap
     >;
 
     void push_message(Message c);
     bool taking_nominal_data();
+    bool taking_nrl_data();
 
     DetectorService(int socket_fd);
     ~DetectorService();
@@ -82,7 +85,7 @@ private:
     std::unique_ptr<TimerLifetime> hafx_debug_hist_timer;
     std::unique_ptr<TimerLifetime> hafx_debug_list_timer;
     std::unique_ptr<TimerLifetime> x123_debug_hist_timer;
-    std::unique_prt<TimerLifetime> hafx_nrl_list_timer;
+    std::unique_ptr<TimerLifetime> hafx_nrl_list_timer;
 
     // command handlers
     void handle_command(DetectorMessages::Initialize cmd);
@@ -115,6 +118,8 @@ private:
     void initialize();
     void start_nominal();
     void read_all_time_slices();
+    void start_nrl_list_mode();
+    void check_and_save_list_buffer();
     void reconnect_detectors();
     void x123_debug(DetectorMessages::X123Debug);
 };

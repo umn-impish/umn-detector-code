@@ -142,22 +142,16 @@ namespace SipmUsb
         DecodedTimeSlice decode() const;
     };
 
-    struct DecodedListBuffer {
-        uint8_t psd1;
-        uint8_t psd2;
-        uint8_t energy1;
-        uint8_t energy2;
-        uint8_t wc1;
-        uint8_t wc2;
-        uint8_t wc3;
-        uint8_t wc4;
-        uint8_t wc5;
-        uint8_t wc6;
-        uint8_t wc7_flags;
+    struct DecodedListBuffer { 
+        std::vector<uint16_t> psd;
+        std::vector<uint16_t> energy;
+        std::vector<uint16_t> wc0; // wc == wallclock
+        std::vector<uint16_t> wc1;
+        std::vector<uint16_t> wc2;
+        std::vector<uint16_t> wc3af; // wc and flags
     };
-    struct FpgaListBuffer : public FpgaIoContainer<uint8_t, 11, 9> {
+    struct FpgaLmNrl1 : public FpgaIoContainer<uint16_t, 6*2048, 5> {
         DecodedListBuffer decode() const;
-        // TODO, find out what the List mode data format is
     };
 
     using FpgaMap = FpgaIoContainer<uint16_t, 2048, 8>;

@@ -77,9 +77,9 @@ TEST(HafxCtrl, OperationRestarts) {
      */
     auto ctrl = get_test_hafx_ctrl();
     ctrl->restart_time_slice_or_histogram();
-    ctrl->restart_list();
+    ctrl->restart_nrl_list_or_list_mode();
     ctrl->restart_time_slice_or_histogram();
-    ctrl->restart_list();
+    ctrl->restart_nrl_list_or_list_mode();
 
     // No exception = good
     SUCCEED();
@@ -170,6 +170,17 @@ TEST(HafxCtrl, DebugCollections) {
     ctrl->read_save_debug<SipmUsb::FpgaCtrl>();
     ctrl->read_save_debug<SipmUsb::ArmStatus>();
     ctrl->read_save_debug<SipmUsb::ArmCal>();
+}
+
+TEST(HafxCtrl, SwapBuffer) {
+    auto ctrl = get_test_hafx_ctrl();
+
+    //see if it can read out registers, swap one bit and write back
+    ctrl->swap_to_buffer_0();
+    ctrl->swap_to_buffer_1();
+    ctrl->swap_to_buffer_0();
+    ctrl->swap_to_buffer_1();
+    ctrl->swap_to_buffer_1();
 }
 
 int main(int argc, char *argv[]) {

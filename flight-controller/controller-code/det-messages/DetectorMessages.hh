@@ -83,7 +83,7 @@ namespace DetectorMessages {
     struct Initialize { };
     struct CollectNominal { bool started = false; };
     struct StopNominal { };
-    struct CollectNrlListMode { bool started = false; };
+
     struct QueryTraceAcquisition { DetectorMessages::HafxChannel ch; };
     struct QueryLegacyHistogram { DetectorMessages::HafxChannel ch; };
     struct QueryListMode { DetectorMessages::HafxChannel ch; };
@@ -94,6 +94,9 @@ namespace DetectorMessages {
 
     struct RestartTimeSliceCollection { };
     struct ImmediateHafxTimeSliceRead { };
+
+    struct StartNrlList { bool started = false; };
+    struct StopNrlList { };
 
     struct __attribute__((packed)) HafxHealth {
         // 0.01K / tick
@@ -180,7 +183,13 @@ namespace DetectorMessages {
         bool missed_pps;
     };
 
-    struct __attribute__((packed)) HafxNrlListStatus {
-        // TODO, figure out list mode format for this
-    }
+    struct HafxNrlListStatus { 
+        // totally messed up
+        std::vector<uint16_t> psd;
+        std::vector<uint16_t> energy;
+        std::vector<uint16_t> wc0; // wc == wallclock
+        std::vector<uint16_t> wc1;
+        std::vector<uint16_t> wc2;
+        std::vector<uint16_t> wc3af;
+    };
 }
