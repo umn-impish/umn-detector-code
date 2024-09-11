@@ -205,12 +205,12 @@ void HafxControl::poll_save_nrl_list() {
         SipmUsb::DecodedListBuffer read_out = read_buffer();
         std::stringstream to_save;
         for (size_t i = 0; i < 2048; ++i) {
-            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.psd[i]; // write each uint16_t in hex format
-            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.energy[i]; // need a better way to do this
-            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.wc0[i]; // could shrink file size by half if I can represent 
-            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.wc1[i]; // uint16_t's as 2 bytes in a .bin / .txt file
-            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.wc2[i]; // :P
-            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.wc3af[i];
+            to_save.write(reinterpret_cast<const char*>(&read_out.psd[i]), sizeof(read_out.psd[i]));
+            to_save.write(reinterpret_cast<const char*>(&read_out.energy[i]), sizeof(read_out.energy[i]));
+            to_save.write(reinterpret_cast<const char*>(&read_out.wc0[i]), sizeof(read_out.wc0[i]));
+            to_save.write(reinterpret_cast<const char*>(&read_out.wc1[i]), sizeof(read_out.wc1[i]));
+            to_save.write(reinterpret_cast<const char*>(&read_out.wc2[i]), sizeof(read_out.wc2[i]));
+            to_save.write(reinterpret_cast<const char*>(&read_out.wc3af[i]), sizeof(read_out.wc3af[i]));
         }
         std::cerr << "emptying 0" << std::endl;
         std::cerr << to_save.str().length() << std::endl;
@@ -224,12 +224,12 @@ void HafxControl::poll_save_nrl_list() {
         SipmUsb::DecodedListBuffer read_out = read_buffer();
         std::stringstream to_save;
         for (size_t i = 0; i < 2048; ++i) {
-            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.psd[i]; // RN each buffer is 50 kB
-            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.energy[i]; // could be 25 kB if I can do above
-            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.wc0[i];
-            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.wc1[i];
-            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.wc2[i];
-            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.wc3af[i];
+            to_save.write(reinterpret_cast<const char*>(&read_out.psd[i]), sizeof(read_out.psd[i]));
+            to_save.write(reinterpret_cast<const char*>(&read_out.energy[i]), sizeof(read_out.energy[i]));
+            to_save.write(reinterpret_cast<const char*>(&read_out.wc0[i]), sizeof(read_out.wc0[i]));
+            to_save.write(reinterpret_cast<const char*>(&read_out.wc1[i]), sizeof(read_out.wc1[i]));
+            to_save.write(reinterpret_cast<const char*>(&read_out.wc2[i]), sizeof(read_out.wc2[i]));
+            to_save.write(reinterpret_cast<const char*>(&read_out.wc3af[i]), sizeof(read_out.wc3af[i]));
         }
         std::cerr << "emptying 1" << std::endl;
         std::cerr << to_save.str().length() << std::endl;
