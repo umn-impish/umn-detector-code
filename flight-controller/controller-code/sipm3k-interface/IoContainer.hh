@@ -121,7 +121,6 @@ namespace SipmUsb
         0b0001, // enable histogram mode
         0       // unused
     };
-
     static constexpr FpgaAction FPGA_ACTION_START_NEW_TRACE_ACQUISITION = {
         // bits mean:
         0b0100, // clear trace
@@ -143,12 +142,12 @@ namespace SipmUsb
     };
 
     struct DecodedListBuffer { 
-        std::vector<uint16_t> psd;
-        std::vector<uint16_t> energy;
-        std::vector<uint16_t> wc0; // wc == wallclock
-        std::vector<uint16_t> wc1;
-        std::vector<uint16_t> wc2;
-        std::vector<uint16_t> wc3af; // wc and flags
+        std::array<uint16_t, 2048> psd;
+        std::array<uint16_t, 2048> energy;
+        std::array<uint16_t, 2048> wc0; // wc == wallclock
+        std::array<uint16_t, 2048> wc1;
+        std::array<uint16_t, 2048> wc2;
+        std::array<uint16_t, 2048> wc3af; // wc and flags
     };
     struct FpgaLmNrl1 : public FpgaIoContainer<uint16_t, 6*2048, 5> {
         DecodedListBuffer decode() const;

@@ -183,6 +183,41 @@ TEST(HafxCtrl, SwapBuffer) {
     ctrl->swap_to_buffer_1();
 }
 
+TEST(HafxCtrl, ReadAndClearBuffer) {
+    // using namespace SipmUsb;
+    // auto ctrl = get_test_hafx_ctrl();
+
+    // ctrl->swap_to_buffer_0();
+    // ctrl->restart_nrl_list_or_list_mode();
+    // ctrl->swap_to_buffer_1();
+    // ctrl->restart_nrl_list_or_list_mode();
+
+    // ctrl->swap_to_buffer_0();
+
+    // while (true) {
+        
+    //     bool full_0 = ctrl->check_full_0();
+    //     while (full_0 != true) {
+
+    //     std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    //     }
+    //     break;
+    // }
+
+    //DetectorMessages::HafxNrlListStatus ret = ctrl->read_buffer();
+    // std::stringstream to_save;
+    // for (size_t i = 0; i < 2048; ++i) {
+    //     to_save << ret.psd[i];
+    //     to_save << ret.energy[i];
+    //     to_save << ret.wc0[i];
+    //     to_save << ret.wc1[i];
+    //     to_save << ret.wc2[i];
+    //     to_save << ret.wc3af[i];
+    // }
+    // std::cerr << to_save.str() << std::endl;
+}
+
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

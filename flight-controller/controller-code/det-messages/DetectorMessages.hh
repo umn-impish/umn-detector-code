@@ -183,13 +183,13 @@ namespace DetectorMessages {
         bool missed_pps;
     };
 
-    struct HafxNrlListStatus { 
-        // totally messed up
-        std::vector<uint16_t> psd;
-        std::vector<uint16_t> energy;
-        std::vector<uint16_t> wc0; // wc == wallclock
-        std::vector<uint16_t> wc1;
-        std::vector<uint16_t> wc2;
-        std::vector<uint16_t> wc3af;
-    };
+    // struct HafxNrlListStatus { 
+    //     // totally messed up
+    //     std::array<uint16_t, 2048> psd;
+    //     std::array<uint16_t, 2048> energy;
+    //     std::array<uint16_t, 2048> wc0; // wc == wallclock
+    //     std::array<uint16_t, 2048> wc1;
+    //     std::array<uint16_t, 2048> wc2;
+    //     std::array<uint16_t, 2048> wc3af;
+    // };
 }

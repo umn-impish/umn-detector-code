@@ -53,7 +53,7 @@ private:
     DetectorMessages::HafxNominalSpectrumStatus
     read_time_slice();
 
-    DetectorMessages::HafxNrlListStatus
+    SipmUsb::DecodedListBuffer
     read_buffer();
 
     void save_settings(const DetectorMessages::HafxSettings& settings);

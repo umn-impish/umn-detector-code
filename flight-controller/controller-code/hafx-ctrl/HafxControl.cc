@@ -146,6 +146,7 @@ void HafxControl::swap_to_buffer_0() {
         log_debug("Tried to swap to buffer 0 but was already in buffer 0");
         return;
     }
+    //std::cerr << cont.registers[15] << std::endl;
     // send new fpga ctrl (tells it to swap to buffer 0)
     driver->write(cont, MemoryType::nvram);
 }
@@ -164,27 +165,27 @@ void HafxControl::swap_to_buffer_1() {
         log_debug("Tried to swap to buffer 1 but was already in buffer 1");
         return;
     }
-    std::cerr << cont.registers[15] << std::endl;
+    //std::cerr << cont.registers[15] << std::endl;
     // send new fpga ctrl (tells it to swap to buffer 1)
     driver->write(cont, MemoryType::nvram);
 }
 
-DetectorMessages::HafxNrlListStatus 
+SipmUsb::DecodedListBuffer
 HafxControl::read_buffer() {
     using namespace SipmUsb;
 
     FpgaLmNrl1 NrlBuff;
     driver->read(NrlBuff, MemoryType::ram);
     const auto decodedNrl = NrlBuff.decode();
-    DetectorMessages::HafxNrlListStatus ret{};
-    ret.psd = decodedNrl.psd;
-    ret.energy = decodedNrl.energy;
-    ret.wc0 = decodedNrl.wc0;
-    ret.wc1 = decodedNrl.wc1;
-    ret.wc2 = decodedNrl.wc2;
-    ret.wc3af = decodedNrl.wc3af;
+    // DetectorMessages::HafxNrlListStatus ret{};
+    // ret.psd = decodedNrl.psd;
+    // ret.energy = decodedNrl.energy;
+    // ret.wc0 = decodedNrl.wc0;
+    // ret.wc1 = decodedNrl.wc1;
+    // ret.wc2 = decodedNrl.wc2;
+    // ret.wc3af = decodedNrl.wc3af;
 
-    return ret;
+    return decodedNrl;
 }
 
 void HafxControl::poll_save_nrl_list() {
@@ -198,22 +199,40 @@ void HafxControl::poll_save_nrl_list() {
     
     // buffer 0 full
     if (full_0) {
-        // TODO, swap buffers and save
+
         swap_to_buffer_0();
 
-        auto read_out = read_buffer();
+        SipmUsb::DecodedListBuffer read_out = read_buffer();
         std::stringstream to_save;
-        to_save.write(reinterpret_cast<char const*>(&read_out), sizeof(read_out));
+        for (size_t i = 0; i < 2048; ++i) {
+            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.psd[i]; // write each uint16_t in hex format
+            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.energy[i]; // need a better way to do this
+            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.wc0[i]; // could shrink file size by half if I can represent 
+            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.wc1[i]; // uint16_t's as 2 bytes in a .bin / .txt file
+            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.wc2[i]; // :P
+            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.wc3af[i];
+        }
+        std::cerr << "emptying 0" << std::endl;
+        std::cerr << to_save.str().length() << std::endl;
         nrl_data_saver->add(to_save.str());
     }
     // buffer 1 full
     if (full_1) {
-        // TODO, swap buffers and save
+        
         swap_to_buffer_1();
         
-        auto read_out = read_buffer();
+        SipmUsb::DecodedListBuffer read_out = read_buffer();
         std::stringstream to_save;
-        to_save.write(reinterpret_cast<char const*>(&read_out), sizeof(read_out));
+        for (size_t i = 0; i < 2048; ++i) {
+            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.psd[i]; // RN each buffer is 50 kB
+            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.energy[i]; // could be 25 kB if I can do above
+            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.wc0[i];
+            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.wc1[i];
+            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.wc2[i];
+            to_save << std::hex << std::setw(4) << std::setfill('0') << read_out.wc3af[i];
+        }
+        std::cerr << "emptying 1" << std::endl;
+        std::cerr << to_save.str().length() << std::endl;
         nrl_data_saver->add(to_save.str());
     }
 }
@@ -312,7 +331,7 @@ void HafxControl::update_registers(SourceT const& source_regs) {
     for (size_t i = 0; i < con.registers.size(); ++i) {
         con.registers[i] = source_regs[i];
     }
-    driver->write(con, SipmUsb::MemoryType::ram);
+    driver->write(con, SipmUsb::MemoryType::nvram);
 }
 
 } // namespace Detector

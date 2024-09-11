@@ -472,6 +472,10 @@ void DetectorService::start_nrl_list_mode() {
     await_pps_edge();
     // wait for pps before starting because its pretty cool to do that B)
     for (auto& [ch, ctrl] : hafx_ctrl) {
+        ctrl->swap_to_buffer_0();
+        ctrl->restart_nrl_list_or_list_mode();
+        // clear both buffers
+        ctrl->swap_to_buffer_1();
         ctrl->restart_nrl_list_or_list_mode();
     }
 }
