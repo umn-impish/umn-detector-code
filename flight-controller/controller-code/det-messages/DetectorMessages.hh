@@ -182,14 +182,4 @@ namespace DetectorMessages {
         uint32_t time_anchor;
         bool missed_pps;
     };
-
-    // struct HafxNrlListStatus { 
-    //     // totally messed up
-    //     std::array<uint16_t, 2048> psd;
-    //     std::array<uint16_t, 2048> energy;
-    //     std::array<uint16_t, 2048> wc0; // wc == wallclock
-    //     std::array<uint16_t, 2048> wc1;
-    //     std::array<uint16_t, 2048> wc2;
-    //     std::array<uint16_t, 2048> wc3af;
-    // };
 }

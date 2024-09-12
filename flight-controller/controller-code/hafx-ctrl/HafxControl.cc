@@ -52,7 +52,7 @@ void HafxControl::restart_time_slice_or_histogram() {
     driver->write(FPGA_ACTION_START_NEW_HISTOGRAM_ACQUISITION, MemoryType::ram);
 }
 
-void HafxControl::restart_nrl_list_or_list_mode() {
+void HafxControl::restart_list_mode() {
     using namespace SipmUsb;
     driver->write(FPGA_ACTION_START_NEW_LIST_ACQUISITION, MemoryType::ram);
 }
@@ -74,6 +74,7 @@ uint16_t HafxControl::check_trace_done() {
 std::optional<time_t> HafxControl::data_time_anchor() {
     return science_time_anchor;
 }
+
 void HafxControl::data_time_anchor(std::optional<time_t> new_anchor) {
     science_time_anchor = new_anchor;
 }
@@ -131,110 +132,60 @@ HafxControl::read_time_slice() {
     return ret;
 }
 
-void HafxControl::swap_to_buffer_0() {
+void HafxControl::swap_nrl_buffer(uint8_t buf_num) {
     using namespace SipmUsb;
 
-    // container
     FpgaCtrl cont;
     // read out current Fpga Ctrl registers
     driver->read(cont, MemoryType::nvram);
-    
-    // check if in buffer 1
-    if (cont.registers[15] & 0x4) {
-        cont.registers[15] = cont.registers[15] & ~(0x4);
-    } else {
-        log_debug("Tried to swap to buffer 0 but was already in buffer 0");
-        return;
-    }
-    //std::cerr << cont.registers[15] << std::endl;
-    // send new fpga ctrl (tells it to swap to buffer 0)
+    // update buffer number
+    auto reg = cont.registers[15];
+    // set bit 2 to 0 for bank 0,
+    //           to 1 for bank 1
+    reg = (buf_num == 0)? (reg & ~4) : (reg | 4);
+    cont.registers[15] = reg;
+
     driver->write(cont, MemoryType::nvram);
 }
 
-void HafxControl::swap_to_buffer_1() {
-    using namespace SipmUsb;
-    // container
-    FpgaCtrl cont;
-    // read out current Fpga Ctrl registers
-    driver->read(cont, MemoryType::nvram);
-    
-    // check if in buffer 0 (registers[15] bit 2)
-    if ((cont.registers[15] & 0x4) == 0) {
-        cont.registers[15] = cont.registers[15] | 0x4;
-    } else {
-        log_debug("Tried to swap to buffer 1 but was already in buffer 1");
-        return;
-    }
-    //std::cerr << cont.registers[15] << std::endl;
-    // send new fpga ctrl (tells it to swap to buffer 1)
-    driver->write(cont, MemoryType::nvram);
-}
-
-SipmUsb::DecodedListBuffer
-HafxControl::read_buffer() {
+std::vector<SipmUsb::NrlListDataPoint>
+HafxControl::read_nrl_buffer() {
     using namespace SipmUsb;
 
-    FpgaLmNrl1 NrlBuff;
-    driver->read(NrlBuff, MemoryType::ram);
-    const auto decodedNrl = NrlBuff.decode();
-    // DetectorMessages::HafxNrlListStatus ret{};
-    // ret.psd = decodedNrl.psd;
-    // ret.energy = decodedNrl.energy;
-    // ret.wc0 = decodedNrl.wc0;
-    // ret.wc1 = decodedNrl.wc1;
-    // ret.wc2 = decodedNrl.wc2;
-    // ret.wc3af = decodedNrl.wc3af;
-
-    return decodedNrl;
+    FpgaLmNrl1 nrl_buff;
+    driver->read(nrl_buff, MemoryType::ram);
+    return nrl_buff.decode();
 }
 
 void HafxControl::poll_save_nrl_list() {
+    /*
+     * Check if NRL list buffers 0 and 1 are full,
+     * and read them out and save the contents
+     * if they are.
+     */
     using namespace SipmUsb;
 
     FpgaResults fpga_res_con;
     driver->read(fpga_res_con, MemoryType::ram);
-    // to check if buffers are full
-    bool full_0 = fpga_res_con.full_0();
-    bool full_1 = fpga_res_con.full_1();
-    
-    // buffer 0 full
-    if (full_0) {
 
-        swap_to_buffer_0();
+    auto save = [this, fpga_res_con](auto buf_num) {
+        if (fpga_res_con.nrl_buffer_full(buf_num)) {
+            swap_nrl_buffer(buf_num);
+            auto data = read_nrl_buffer();
 
-        SipmUsb::DecodedListBuffer read_out = read_buffer();
-        std::stringstream to_save;
-        for (size_t i = 0; i < 2048; ++i) {
-            to_save.write(reinterpret_cast<const char*>(&read_out.psd[i]), sizeof(read_out.psd[i]));
-            to_save.write(reinterpret_cast<const char*>(&read_out.energy[i]), sizeof(read_out.energy[i]));
-            to_save.write(reinterpret_cast<const char*>(&read_out.wc0[i]), sizeof(read_out.wc0[i]));
-            to_save.write(reinterpret_cast<const char*>(&read_out.wc1[i]), sizeof(read_out.wc1[i]));
-            to_save.write(reinterpret_cast<const char*>(&read_out.wc2[i]), sizeof(read_out.wc2[i]));
-            to_save.write(reinterpret_cast<const char*>(&read_out.wc3af[i]), sizeof(read_out.wc3af[i]));
+            // Put the decoded data into a std::span of bytes
+            auto to_save = std::span{
+                reinterpret_cast<unsigned char*>(data.data()),
+                data.size() * sizeof(NrlListDataPoint)
+            };
+
+            nrl_data_saver->add(to_save);
         }
-        std::cerr << "emptying 0" << std::endl;
-        std::cerr << to_save.str().length() << std::endl;
-        nrl_data_saver->add(to_save.str());
-    }
-    // buffer 1 full
-    if (full_1) {
-        
-        swap_to_buffer_1();
-        
-        SipmUsb::DecodedListBuffer read_out = read_buffer();
-        std::stringstream to_save;
-        for (size_t i = 0; i < 2048; ++i) {
-            to_save.write(reinterpret_cast<const char*>(&read_out.psd[i]), sizeof(read_out.psd[i]));
-            to_save.write(reinterpret_cast<const char*>(&read_out.energy[i]), sizeof(read_out.energy[i]));
-            to_save.write(reinterpret_cast<const char*>(&read_out.wc0[i]), sizeof(read_out.wc0[i]));
-            to_save.write(reinterpret_cast<const char*>(&read_out.wc1[i]), sizeof(read_out.wc1[i]));
-            to_save.write(reinterpret_cast<const char*>(&read_out.wc2[i]), sizeof(read_out.wc2[i]));
-            to_save.write(reinterpret_cast<const char*>(&read_out.wc3af[i]), sizeof(read_out.wc3af[i]));
-        }
-        std::cerr << "emptying 1" << std::endl;
-        std::cerr << to_save.str().length() << std::endl;
-        nrl_data_saver->add(to_save.str());
-    }
+    };
+
+    // Save buffers 0, 1
+    save(0);
+    save(1);
 }
 
 void HafxControl::update_settings(const DetectorMessages::HafxSettings& new_settings) {

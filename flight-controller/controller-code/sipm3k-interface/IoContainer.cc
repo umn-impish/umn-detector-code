@@ -1,4 +1,5 @@
 #include "IoContainer.hh"
+#include <cstring>
 
 namespace SipmUsb
 {
@@ -24,16 +25,12 @@ namespace SipmUsb
         return (registers[2] >> 9) & 0x7f;
     }
     
-    uint16_t FpgaResults::full_0() const {
-        // from BPI code, full_0 is in results register ( registers[2] ) bit 1 (2^1 = 2)
-        std::cerr << registers[2] << std::endl;
-        return (registers[2] & 2);
-    }
-    
-    uint16_t FpgaResults::full_1() const {
-        // from BPI code, full_1 is in results register ( registers[2] ) bit 3 (2^3 = 8)
-        std::cerr << registers[2] << std::endl;
-        return (registers[2] & 8);
+    bool FpgaResults::nrl_buffer_full(uint8_t buf_num) const {
+        // Bit 1 (2) indicates if buffer 0 is full
+        // Bit 3 (8) indicates if buffer 1 is full
+        uint8_t mask = (buf_num == 0)? 2 : 8;
+        bool is_full = static_cast<bool>(registers[2] & mask);
+        return is_full;
     }
 
     std::vector<ListModeDataPoint> FpgaListMode::parse_list_buffer() const {
@@ -41,9 +38,6 @@ namespace SipmUsb
         uint16_t detail_reg = registers[0];
         // as per Bridgeport, first 12 bits hold # of events
         size_t num_events = detail_reg & 0xfff;
-        // mode is the topmost bit
-        uint8_t lm_mode = detail_reg >> 15;
-        if (lm_mode == 1) { throw std::runtime_error("lm_mode must be set to zero for the higher time precision"); }
 
         // each list mode event is 3 uint16_t long. they start at index 4.
         size_t max_idx = 4 + 3*num_events;
@@ -77,46 +71,26 @@ namespace SipmUsb
         return ret;
     }
 
-    DecodedListBuffer FpgaLmNrl1::decode() const {
-        // this is not complete, need to figure out how to implment that magic python method
+    std::vector<NrlListDataPoint> FpgaLmNrl1::decode() const {
+        // size per event: 6 (x2 bytes)
+        constexpr size_t EVT_SIZE = 6;
+        uint16_t num_evts = registers[0] & 0xfff;
 
-        uint32_t number_events = registers[0] & 0xFFF;
-        uint32_t E0 = number_events * 6; // idk why mike calls it this, but it is the length length of the registers array in uint16_t's
-
-        std::array<uint16_t, 2048> psd_cont; // containers for ret values
-        std::array<uint16_t, 2048> energy_cont;
-        std::array<uint16_t, 2048> wc0_cont;
-        std::array<uint16_t, 2048> wc1_cont;
-        std::array<uint16_t, 2048> wc2_cont;
-        std::array<uint16_t, 2048> wc3af_cont;
-
-        for (size_t i = 6; i < E0; i += 6) {
-            psd_cont[i / 6] = registers[i];
+        NrlListDataPoint cur_data;
+        std::vector<NrlListDataPoint> ret;
+        // Skip the first event because it's special
+        for (size_t i = EVT_SIZE; i < (EVT_SIZE * num_evts); i += EVT_SIZE) {
+            std::memset(&cur_data, 0, sizeof(cur_data));
+            // Memcpy the buffer into our bit field struct
+            std::memcpy(
+                &cur_data,
+                registers.data() + i,
+                sizeof(cur_data)
+            );
+            // We memset the cur_data at each iteration
+            // so moving it is fine to do
+            ret.push_back(std::move(cur_data));
         }
-        for (size_t i = 7; i < E0; i += 6) {
-            energy_cont[i / 6] = registers[i]; // '/' always floor divides
-        }
-        for (size_t i = 8; i < E0; i += 6) {
-            wc0_cont[i / 6] = registers[i];
-        }
-        for (size_t i = 9; i < E0; i += 6) {
-            wc1_cont[i / 6] = registers[i];
-        }
-        for (size_t i = 10; i < E0; i += 6) {
-            wc2_cont[i / 6] = registers[i];
-        }
-        for (size_t i = 11; i < E0; i += 6) {
-            wc3af_cont[i / 6] = registers[i]; // the last 8 bits will be 0s no matter what (padding!) bits 0-2 are wc3 and 3-7 are flags
-        }
-
-        DecodedListBuffer ret{
-            psd_cont,
-            energy_cont,
-            wc0_cont,
-            wc1_cont,
-            wc2_cont,
-            wc3af_cont
-        };
 
         return ret;
     }

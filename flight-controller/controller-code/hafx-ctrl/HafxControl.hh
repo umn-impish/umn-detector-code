@@ -20,12 +20,11 @@ public:
     generate_health();
 
     void restart_time_slice_or_histogram();
-    void restart_nrl_list_or_list_mode();
+    void restart_list_mode();
     void restart_trace();
     uint16_t check_trace_done();
+    void swap_nrl_buffer(uint8_t buf_num);
     void poll_save_nrl_list();
-    void swap_to_buffer_0();
-    void swap_to_buffer_1();
     void poll_save_time_slice();
 
     // debug, settings
@@ -53,8 +52,8 @@ private:
     DetectorMessages::HafxNominalSpectrumStatus
     read_time_slice();
 
-    SipmUsb::DecodedListBuffer
-    read_buffer();
+    std::vector<SipmUsb::NrlListDataPoint>
+    read_nrl_buffer();
 
     void save_settings(const DetectorMessages::HafxSettings& settings);
     void send_off_settings();

@@ -87,8 +87,7 @@ namespace SipmUsb
     struct FpgaResults : public FpgaIoContainer<uint16_t, 16, 2> {
         uint16_t trace_done() const;
         uint16_t num_avail_time_slices() const;
-        uint16_t full_0() const;
-        uint16_t full_1() const;
+        bool nrl_buffer_full(uint8_t buf_num) const;
     };
 
     using FpgaHistogram = FpgaIoContainer<uint32_t, 4096, 3>;
@@ -141,17 +140,24 @@ namespace SipmUsb
         DecodedTimeSlice decode() const;
     };
 
-    struct DecodedListBuffer { 
-        std::array<uint16_t, 2048> psd;
-        std::array<uint16_t, 2048> energy;
-        std::array<uint16_t, 2048> wc0; // wc == wallclock
-        std::array<uint16_t, 2048> wc1;
-        std::array<uint16_t, 2048> wc2;
-        std::array<uint16_t, 2048> wc3af; // wc and flags
+    struct NrlListDataPoint { 
+        uint16_t psd;
+        uint16_t energy;
+        // Last 8 bytes (64 bits) are split up as follows
+        // We allocate the bits of the uint64_t
+        // using bit fields
+        uint64_t wall_clock_time  : 51;
+        uint64_t external_trigger : 1;
+        uint64_t piled_up         : 1;
+        uint64_t sum_overflow     : 1;
+        uint64_t out_of_range     : 1;
+        uint64_t was_pps          : 1;
+        // padding bits we can ignore
+        uint64_t padding          : 8;
     };
-    struct FpgaLmNrl1 : public FpgaIoContainer<uint16_t, 6*2048, 5> {
-        DecodedListBuffer decode() const;
+    struct FpgaLmNrl1 : public FpgaIoContainer<uint16_t, 6*2048ULL, 5> {
+        std::vector<NrlListDataPoint> decode() const;
     };
 
-    using FpgaMap = FpgaIoContainer<uint16_t, 2048, 8>;
+    using FpgaMap = FpgaIoContainer<uint16_t, 2048ULL, 8>;
 }

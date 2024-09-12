@@ -287,7 +287,7 @@ void DetectorService::handle_command(dm::HafxDebug cmd) {
         );
     }
     else if (acq_type == dbr_t::Type::ListMode) {
-        ctrl->restart_nrl_list_or_list_mode();
+        ctrl->restart_list_mode();
         hafx_debug_list_timer = TimerLifetime::create(
             queue.push_delay(dm::QueryListMode{cmd.ch}, delay)
         );
@@ -455,10 +455,8 @@ void DetectorService::handle_command(dm::StopNominal) {
     nominal_timer = nullptr;
 }
 
-// TODO: NRL LIST MODE
-
-void DetectorService::check_and_save_list_buffer() {
-    for (const auto& [ch, ctrl] : hafx_ctrl) {
+void DetectorService::check_save_nrl_buffers() {
+    for (const auto& [_, ctrl] : hafx_ctrl) {
         try {
             ctrl->poll_save_nrl_list();
         }
@@ -471,12 +469,13 @@ void DetectorService::check_and_save_list_buffer() {
 void DetectorService::start_nrl_list_mode() {
     await_pps_edge();
     // wait for pps before starting because its pretty cool to do that B)
-    for (auto& [ch, ctrl] : hafx_ctrl) {
-        ctrl->swap_to_buffer_0();
-        ctrl->restart_nrl_list_or_list_mode();
-        // clear both buffers
-        ctrl->swap_to_buffer_1();
-        ctrl->restart_nrl_list_or_list_mode();
+    for (auto& [_, ctrl] : hafx_ctrl) {
+        // clear both NRL buffers
+        ctrl->swap_nrl_buffer(0);
+        ctrl->restart_list_mode();
+
+        ctrl->swap_nrl_buffer(1);
+        ctrl->restart_list_mode();
     }
 }
 
@@ -484,7 +483,9 @@ void DetectorService::handle_command(dm::StartNrlList cmd) {
     // copied format from Time slice stuff above
     auto finish = [this](auto cmd) {
         constexpr auto CHECK_BUFFER_FULL_DELAY = 250ms;
-        hafx_nrl_list_timer = TimerLifetime::create(queue.push_delay(cmd, CHECK_BUFFER_FULL_DELAY));
+        hafx_nrl_list_timer = TimerLifetime::create(
+            queue.push_delay(cmd, CHECK_BUFFER_FULL_DELAY)
+        );
     };
 
     if (not cmd.started) {
@@ -494,10 +495,9 @@ void DetectorService::handle_command(dm::StartNrlList cmd) {
         return;
     }
 
-    check_and_save_list_buffer();
+    check_save_nrl_buffers();
     finish(cmd);
 }
-
 
 void DetectorService::handle_command(dm::StopNrlList) {
     hafx_nrl_list_timer = nullptr;

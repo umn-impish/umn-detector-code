@@ -6,9 +6,13 @@
 #include <IoContainer.hh>
 
 std::shared_ptr<SipmUsb::UsbManager> get_usb_manager() {
-    std::string TEST_SERIAL{"55FD9A8F4A344E5120202041131E05FF"};
+    // std::string TEST_SERIAL{"7A65CD294A344E51202020412B244FF"};
     SipmUsb::BridgeportDeviceManager device_manager;
-    return device_manager.device_map.at(TEST_SERIAL);
+    // take first availabe device
+    for (auto [_, man] : device_manager.device_map) {
+        return man;
+    }
+    throw std::runtime_error{"no device connected"};
 }
 
 template<class con_t>
@@ -108,8 +112,7 @@ TEST(sipm3k, TraceDone) {
     EXPECT_EQ(1, trace_done) << "Trace did not complete in 1 second";
 }
 
-// TODO add more tests for each container
-// maybe template?
+// TODO NRL mode test
 
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
