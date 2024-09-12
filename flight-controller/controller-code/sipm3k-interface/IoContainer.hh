@@ -140,7 +140,8 @@ namespace SipmUsb
         DecodedTimeSlice decode() const;
     };
 
-    struct NrlListDataPoint { 
+    // Pack the struct to only take up 12B not 16
+    struct __attribute__((packed)) NrlListDataPoint { 
         uint16_t psd;
         uint16_t energy;
         // Last 8 bytes (64 bits) are split up as follows
