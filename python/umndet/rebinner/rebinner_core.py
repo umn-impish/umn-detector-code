@@ -2,8 +2,6 @@ from umndet.common.impress_exact_structs import HafxHistogramArray, NominalHafx
 import umndet.common.constants as umncon
 
 import copy
-import ctypes
-import gzip
 
 
 def read_energy_edges():

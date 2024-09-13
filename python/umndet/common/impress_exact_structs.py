@@ -2,10 +2,9 @@ import base64
 import ctypes
 import struct
 
-import astropy.units as u
+# Convert deg Celsius to Kelvin
+c_to_k = lambda t: t + 273.15
 
-# Nominal HaFX data class from C++ implemented in Python
-# to make loading/decoding easier
 NUM_HG_BINS = 123
 HafxHistogramArray = NUM_HG_BINS * ctypes.c_uint32
 class NominalHafx(ctypes.Structure):
@@ -25,12 +24,16 @@ class NominalHafx(ctypes.Structure):
 
     def to_json(self):
         units = {
-            'dead_time': 'microsecond',
+            'dead_time': 'nanosecond',
             'anode_current': 'nanoampere',
         }
+        # Explicitly convert time units
+        # into ones which are nicer to use.
+        # The units are defined in the firmware
+        # specification
         converters = {
-            'dead_time': lambda x: ((800 * x) << u.ns).to_value(u.microsecond),
-            'anode_current': lambda x: ((25 * x) << u.nanoampere).to_value(u.nanoampere),
+            'dead_time': lambda x: 800 * x,
+            'anode_current': lambda x: 25 * x,
             'ch': lambda x: ['c1', 'm1', 'm5', 'x1'][x],
             'histogram': lambda x: list(x),
             'missed_pps': lambda x: bool(x)
@@ -70,16 +73,16 @@ class HafxHealth(ctypes.Structure):
             'sipm_operating_voltage': 'volt',
             'sipm_target_voltage': 'volt',
             'counts': 'count',
-            'dead_time': 'microsecond',
-            'real_time': 'microsecond'
+            'dead_time': 'nanosecond',
+            'real_time': 'nanosecond'
         }
         converters = {
-            'arm_temp': lambda x: (0.01 * x << u.K).to_value(u.Kelvin),
-            'sipm_temp': lambda x: (0.01 * x << u.K).to_value(u.Kelvin),
-            'sipm_operating_voltage': lambda x: (0.01 * x << u.volt).to_value(u.volt),
-            'sipm_target_voltage': lambda x: (0.01 * x << u.volt).to_value(u.volt),
-            'dead_time': lambda x: (x << (25 * u.ns)).to_value(u.us),
-            'real_time': lambda x: (x << (25 * u.ns)).to_value(u.us),
+            'arm_temp': lambda x: 0.01 * x,
+            'sipm_temp': lambda x: 0.01 * x,
+            'sipm_operating_voltage': lambda x: 0.01 * x,
+            'sipm_target_voltage': lambda x: 0.01 * x,
+            'dead_time': lambda x: x * 25,
+            'real_time': lambda x: x * 25,
         }
         return {
             k: {
@@ -119,8 +122,8 @@ class X123Health(ctypes.Structure):
             'real_time': 'millisecond'
         }
         converters = {
-            'board_temp': lambda x: (x << u.deg_C).to_value(u.Kelvin, equivalencies=u.temperature()),
-            'det_high_voltage': lambda x: (0.5*x << u.volt).to_value(u.volt)
+            'board_temp': c_to_k,
+            'det_high_voltage': lambda x: 0.5*x
         }
         return {
             k: {
@@ -131,9 +134,6 @@ class X123Health(ctypes.Structure):
         }
 
 
-# In case we want to load health data into Python,
-# which we almost certainly do want to,
-# we have this class! :-)
 class DetectorHealth(ctypes.Structure):
     _pack_ = 1
     _fields_ = [
@@ -221,9 +221,9 @@ class X123Debug:
 
 
 class HafxDebug:
-    # Order matters here (decoding enum)
-    # Taken from MDS documentation
-    # https://www.bridgeportinstruments.com/products/software/wxMCA_doc/documentation/english/mds/mca3k/introduction.html
+    # * Order matters here (we are decoding an enum)
+    # * Data sizes are taken from MDS documentation
+    #   https://www.bridgeportinstruments.com/products/software/wxMCA_doc/documentation/english/mds/mca3k/introduction.html
     TYPE_DECODE_MAP = [
         ('arm_ctrl', '<12f'),
         ('arm_cal', '<64f'),
@@ -241,7 +241,7 @@ class HafxDebug:
         self.bytes = debug_bytes
 
     def decode(self) -> dict[str, object]:
-        type_, unpack_str = TYPE_DECODE_MAP[self.type]
+        type_, unpack_str = HafxDebug.TYPE_DECODE_MAP[self.type]
         return {
             'type': type_,
             'registers': list(
