@@ -1,3 +1,12 @@
+'''
+Helper functions for reading in binary data files
+into structured data.
+
+Each defined type of data file is read using the
+function corresponding to it, which wraps
+part of generic_read_binary or read_binary,
+depending on the data structure in the binary data.
+'''
 import ctypes
 import struct
 import umndet.common.impress_exact_structs as ies
@@ -84,3 +93,4 @@ def reverse_bridgeport_mapping(adc_mapping: Iterable[int]) -> list[int]:
     )
     reversed_bins.append(4097)
     return reversed_bins
+
