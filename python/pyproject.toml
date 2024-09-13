@@ -7,8 +7,10 @@ packages = ['umndet']
 
 [project]
 requires-python = ">= 3.11"
-version = "0.1"
+version = "0.1.2"
 name = "umndet"
+description = 'Flight and ground code for the IMPRESS/EXACT/IMPISH small-payload missions'
+readme = 'readme.md'
 dependencies = [
     # We have none for the "core"
 ]
