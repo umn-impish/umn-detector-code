@@ -22,7 +22,7 @@ public:
     void restart_time_slice_or_histogram();
     void restart_list_mode();
     void restart_trace();
-    uint16_t check_trace_done();
+    bool check_trace_done();
     void swap_nrl_buffer(uint8_t buf_num);
     void poll_save_nrl_list();
     void poll_save_time_slice();
@@ -35,7 +35,7 @@ public:
     template <class ConT>
     void read_save_debug();
 
-    std::optional<time_t> data_time_anchor();
+    std::optional<time_t> data_time_anchor() const;
     void data_time_anchor(std::optional<time_t> new_anchor);
 private:
     std::shared_ptr<SipmUsb::UsbManager> driver;
