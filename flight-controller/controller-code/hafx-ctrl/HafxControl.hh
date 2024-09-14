@@ -12,6 +12,11 @@
 namespace Detector
 {
 
+// Reduce the NRL native 11-byte frame to a
+// smaller one
+std::vector<DetectorMessages::StrippedNrlDataPoint>
+strip_nrl_data(std::vector<SipmUsb::NrlListDataPoint>&& vec);
+
 class HafxControl {
 public:
     HafxControl(std::shared_ptr<SipmUsb::UsbManager> driver_, DetectorPorts ports);

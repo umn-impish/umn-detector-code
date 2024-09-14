@@ -165,19 +165,46 @@ void HafxControl::poll_save_nrl_list() {
 
     FpgaResults fpga_res_con;
     driver->read(fpga_res_con, MemoryType::ram);
+    uint32_t time_after_read = time(NULL);
 
-    auto save = [this, fpga_res_con](auto buf_num) {
+    auto save = [&](auto buf_num) {
         if (fpga_res_con.nrl_buffer_full(buf_num)) {
-            swap_nrl_buffer(buf_num);
-            auto data = read_nrl_buffer();
-
+            this->swap_nrl_buffer(buf_num);
+            auto data = this->read_nrl_buffer();
+#ifndef DEBUG
+            // If there is no PPS in the data,
+            // we can't use it. So, discard it.
+            bool has_pps = false;
+            for (const auto& d : data) {
+                has_pps = d.was_pps || has_pps;
+            }
+            if (!has_pps)
+                return;
+#endif
+            auto stripped = strip_nrl_data(std::move(data));
             // Put the decoded data into a std::span of bytes
-            auto to_save = std::span{
-                reinterpret_cast<unsigned char*>(data.data()),
-                data.size() * sizeof(NrlListDataPoint)
+            auto evts_save = std::span{
+                reinterpret_cast<unsigned char*>(stripped.data()),
+                stripped.size() * sizeof(decltype(stripped)::value_type)
             };
+            // Put some metadata into spans to save
+            // Never gonna be more than 2048 events;
+            // could be fewer but unlikely
+            uint16_t len = static_cast<uint16_t>(stripped.size());
+            auto size_save = std::span{
+                reinterpret_cast<unsigned char*>(&len),
+                sizeof(len)};
+            auto timestamp_save = std::span{
+                reinterpret_cast<unsigned char*>(&time_after_read),
+                sizeof(time_after_read)};
 
-            nrl_data_saver->add(to_save);
+            // Save order:
+            // - # of events recorded
+            // - data
+            // - timestamp immediately after readout
+            this->nrl_data_saver->add(size_save);
+            this->nrl_data_saver->add(evts_save);
+            this->nrl_data_saver->add(timestamp_save);
         }
     };
 
@@ -281,6 +308,29 @@ void HafxControl::update_registers(SourceT const& source_regs) {
         con.registers[i] = source_regs[i];
     }
     driver->write(con, SipmUsb::MemoryType::nvram);
+}
+
+std::vector<DetectorMessages::StrippedNrlDataPoint>
+strip_nrl_data(std::vector<SipmUsb::NrlListDataPoint>&& vec) {
+    /*
+     * The original data format coming out of the NRL list mode
+     * is to store the wall clock as a 51-bit number, in multiples
+     * of 25 nanoseconds. That could reach almost two year's worth
+     * of data (650 days).
+     *
+     * Instead, in this case, we scale down the precision of the clock,
+     * and assume that the data will only span times on the order
+     * of ~5-10s. Then we don't need as many bits for the wall clock time.
+     * We can also drop some other useless information--
+     * we don't care about pulse shape discrimination.
+     * */
+
+    using stripped_t = DetectorMessages::StrippedNrlDataPoint;
+    std::vector<stripped_t> ret;
+    for (const auto& orig : vec) {
+        ret.emplace_back(stripped_t::from(orig));
+    }
+    return ret;
 }
 
 } // namespace Detector
