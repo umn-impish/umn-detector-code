@@ -1,6 +1,7 @@
 #pragma once
 
 #include <netinet/in.h>
+#include <IoContainer.hh>
 
 #include <array>
 #include <ctime>
@@ -8,6 +9,7 @@
 #include <optional>
 #include <variant>
 #include <vector>
+#include <type_traits>
 
 namespace DetectorMessages {
     enum class HafxChannel : uint8_t {
@@ -182,4 +184,27 @@ namespace DetectorMessages {
         uint32_t time_anchor;
         bool missed_pps;
     };
+
+    // Strip down the NRL data to only the bits we care about
+    struct __attribute__((packed)) StrippedNrlDataPoint {
+        // Assumes that the 51-bit wall clock never exceeds
+        // ~5-10 seconds, which should be reasonable in this
+        // application.
+        // Assumes we scale down to 200ns precision (8 25ns divs),
+        // so with 25 bits, that gives a max time of 6.7s.
+        uint32_t wall_clock   : 25;
+        uint32_t energy       : 4;
+        uint32_t was_pps      : 1;
+        uint32_t piled_up     : 1;
+        uint32_t out_of_range : 1;
+
+        static StrippedNrlDataPoint
+        from(const SipmUsb::NrlListDataPoint& orig);
+    };
+    static_assert(
+        std::is_trivially_copyable_v<StrippedNrlDataPoint>,
+        "Stripped NRL struct must be a 'POD' type"
+    );
+    // Size of the _data_ is a uint32, even with the static method
+    static_assert(sizeof(StrippedNrlDataPoint) == sizeof(uint32_t));
 }
