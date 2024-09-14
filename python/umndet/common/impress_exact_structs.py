@@ -241,11 +241,22 @@ class HafxDebug:
         self.bytes = debug_bytes
 
     def decode(self) -> dict[str, object]:
-        type_, unpack_str = TYPE_DECODE_MAP[self.type]
+        type_, unpack_str = HafxDebug.TYPE_DECODE_MAP[self.type]
         return {
             'type': type_,
             'registers': list(
                 struct.unpack(unpack_str, self.bytes)
             )
         }
+
+
+class StrippNrlDataPoint(ctypes.LittleEndianStructure):
+    _pack_ = 1
+    _fields_ = (
+        ('relative_timestamp', ctypes.c_uint32, 25),
+        ('energy', ctypes.c_uint32, 4),
+        ('was_pps', ctypes.c_uint32, 1),
+        ('piled_up', ctypes.c_uint32, 1),
+        ('out_of_range', ctypes.c_uint32, 1),
+    )
 
