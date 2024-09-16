@@ -168,43 +168,39 @@ void HafxControl::poll_save_nrl_list() {
     uint32_t time_after_read = time(NULL);
 
     auto save = [&](auto buf_num) {
-        if (fpga_res_con.nrl_buffer_full(buf_num)) {
+        auto full = fpga_res_con.nrl_buffer_full(buf_num);
+        if (full) {
+#ifndef DEBUG
             this->swap_nrl_buffer(buf_num);
             auto data = this->read_nrl_buffer();
-#ifndef DEBUG
             // If there is no PPS in the data,
             // we can't use it. So, discard it.
             bool has_pps = false;
-            for (const auto& d : data) {
-                has_pps = d.was_pps || has_pps;
-            }
             if (!has_pps)
                 return;
 #endif
             auto stripped = strip_nrl_data(std::move(data));
-            // Put the decoded data into a std::span of bytes
-            auto evts_save = std::span{
-                reinterpret_cast<unsigned char*>(stripped.data()),
+            auto evts_save = std::string{
+                reinterpret_cast<const char*>(stripped.data()),
                 stripped.size() * sizeof(decltype(stripped)::value_type)
             };
-            // Put some metadata into spans to save
+            // Put some metadata into strings to save
             // Never gonna be more than 2048 events;
             // could be fewer but unlikely
             uint16_t len = static_cast<uint16_t>(stripped.size());
-            auto size_save = std::span{
-                reinterpret_cast<unsigned char*>(&len),
+            auto size_save = std::string{
+                reinterpret_cast<const char*>(&len),
                 sizeof(len)};
-            auto timestamp_save = std::span{
-                reinterpret_cast<unsigned char*>(&time_after_read),
+            auto timestamp_save = std::string{
+                reinterpret_cast<const char*>(&time_after_read),
                 sizeof(time_after_read)};
 
             // Save order:
             // - # of events recorded
             // - data
             // - timestamp immediately after readout
-            this->nrl_data_saver->add(size_save);
-            this->nrl_data_saver->add(evts_save);
-            this->nrl_data_saver->add(timestamp_save);
+            // save all at once so we don't get misaligned files
+            this->nrl_data_saver->add(size_save + evts_save + timestamp_save);
         }
     };
 
