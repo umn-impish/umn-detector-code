@@ -250,7 +250,7 @@ class HafxDebug:
         }
 
 
-class StrippNrlDataPoint(ctypes.LittleEndianStructure):
+class StrippedNrlDataPoint(ctypes.LittleEndianStructure):
     _pack_ = 1
     _fields_ = (
         ('relative_timestamp', ctypes.c_uint32, 25),
