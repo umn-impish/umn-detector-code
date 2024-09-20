@@ -13,13 +13,16 @@ constexpr unsigned short science_port = 30000;
 constexpr unsigned short debug_port = 31000;
 
 std::unique_ptr<Detector::HafxControl> get_test_hafx_ctrl() {
-    std::string TEST_SERIAL{"AB28CB7F4A344E51202020382E2B0BFF"};
     SipmUsb::BridgeportDeviceManager device_manager;
 
-    return std::make_unique<Detector::HafxControl>(
-        device_manager.device_map.at(TEST_SERIAL),
-        Detector::DetectorPorts{science_port, debug_port}
-    );
+    for (auto [_, man] : device_manager.device_map) {
+        return std::make_unique<Detector::HafxControl>(
+            man,
+            Detector::DetectorPorts{science_port, debug_port}
+        );
+    }
+
+    throw std::runtime_error{"no device connected"};
 }
 
 
