@@ -85,6 +85,7 @@ namespace SipmUsb
     using FpgaStatistics = FpgaIoContainer<uint32_t, 16, 1>;
 
     struct FpgaResults : public FpgaIoContainer<uint16_t, 16, 2> {
+        bool trace_done() const;
         uint16_t num_avail_time_slices() const;
     };
 

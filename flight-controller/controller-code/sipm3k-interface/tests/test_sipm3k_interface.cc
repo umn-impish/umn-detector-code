@@ -6,9 +6,11 @@
 #include <IoContainer.hh>
 
 std::shared_ptr<SipmUsb::UsbManager> get_usb_manager() {
-    std::string TEST_SERIAL{"55FD9A8F4A344E5120202041131E05FF"};
     SipmUsb::BridgeportDeviceManager device_manager;
-    return device_manager.device_map.at(TEST_SERIAL);
+    for (auto [_, dev]: device_manager.device_map) {
+        return dev;
+    }
+    throw std::runtime_error{"nothing plugged in"};
 }
 
 template<class con_t>
@@ -88,6 +90,38 @@ TEST(sipm3k, TimeSliceRead) {
     auto buff_num = tsc.decode().buffer_number;
     EXPECT_GE(buff_num, 0) << "buffer number was zero";
     EXPECT_LE(buff_num, 256) << "buffer number was crap data";
+}
+
+TEST(sipm3k, TraceDoneAndAcquire) {
+    using namespace SipmUsb;
+    auto driv = get_usb_manager();
+    
+    auto restart_regs = FPGA_ACTION_START_NEW_TRACE_ACQUISITION;
+    driv->write(restart_regs, MemoryType::ram);
+
+    using namespace std::chrono_literals;
+    std::this_thread::sleep_for(1s);
+
+    FpgaResults res{};
+
+    bool done = false;
+    int i = 0;
+    while (!done && i < 10) {
+        driv->read(res, MemoryType::ram);
+        done = res.trace_done();
+        std::this_thread::sleep_for(1s);
+        ++i;
+    }
+
+    EXPECT_EQ(1, done) << "Trace must be acquired by end of test (wtf)";
+
+    auto trace = FpgaOscilloscopeTrace{};
+    driv->read(trace, MemoryType::ram);
+    for (const auto& datapt : trace.registers) {
+        std::cout << datapt << ' ';
+    }
+    std::cout << std::endl;
+    SUCCEED();
 }
 
 // TODO add more tests for each container

@@ -61,6 +61,15 @@ void HafxControl::restart_trace() {
     driver->write(FPGA_ACTION_START_NEW_TRACE_ACQUISITION, MemoryType::ram);
 }
 
+bool HafxControl::check_trace_done() {
+    using namespace SipmUsb;
+    FpgaResults res{};
+    driver->read(res, SipmUsb::MemoryType::ram);
+    
+    // From IoContainer.cc
+    return res.trace_done();
+}
+
 std::optional<time_t> HafxControl::data_time_anchor() {
     return science_time_anchor;
 }
