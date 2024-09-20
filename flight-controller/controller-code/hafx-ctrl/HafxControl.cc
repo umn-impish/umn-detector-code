@@ -169,39 +169,44 @@ void HafxControl::poll_save_nrl_list() {
 
     auto save = [&](auto buf_num) {
         auto full = fpga_res_con.nrl_buffer_full(buf_num);
-        if (full) {
-#ifndef DEBUG
-            this->swap_nrl_buffer(buf_num);
-            auto data = this->read_nrl_buffer();
-            // If there is no PPS in the data,
-            // we can't use it. So, discard it.
-            bool has_pps = false;
-            if (!has_pps)
-                return;
-#endif
-            auto stripped = strip_nrl_data(std::move(data));
-            auto evts_save = std::string{
-                reinterpret_cast<const char*>(stripped.data()),
-                stripped.size() * sizeof(decltype(stripped)::value_type)
-            };
-            // Put some metadata into strings to save
-            // Never gonna be more than 2048 events;
-            // could be fewer but unlikely
-            uint16_t len = static_cast<uint16_t>(stripped.size());
-            auto size_save = std::string{
-                reinterpret_cast<const char*>(&len),
-                sizeof(len)};
-            auto timestamp_save = std::string{
-                reinterpret_cast<const char*>(&time_after_read),
-                sizeof(time_after_read)};
-
-            // Save order:
-            // - # of events recorded
-            // - data
-            // - timestamp immediately after readout
-            // save all at once so we don't get misaligned files
-            this->nrl_data_saver->add(size_save + evts_save + timestamp_save);
+        if (!full) return;
+        log_debug(std::to_string(buf_num) + " is full");
+#if 1
+        this->swap_nrl_buffer(buf_num);
+        auto data = this->read_nrl_buffer();
+        // If there is no PPS in the data,
+        // we can't use it. So, discard it.
+        bool has_pps = false; 
+        for (const auto& d : data) {
+            has_pps = has_pps || d.was_pps;
         }
+        if (!has_pps) {
+            log_info("there was no PPS");
+            return;
+        }
+#endif
+        auto stripped = strip_nrl_data(std::move(data));
+        auto evts_save = std::string{
+            reinterpret_cast<const char*>(stripped.data()),
+            stripped.size() * sizeof(decltype(stripped)::value_type)
+        };
+        // Put some metadata into strings to save
+        // Never gonna be more than 2048 events;
+        // could be fewer but unlikely
+        uint16_t len = static_cast<uint16_t>(stripped.size());
+        auto size_save = std::string{
+            reinterpret_cast<const char*>(&len),
+            sizeof(len)};
+        auto timestamp_save = std::string{
+            reinterpret_cast<const char*>(&time_after_read),
+            sizeof(time_after_read)};
+
+        // Save order:
+        // - # of events recorded
+        // - data
+        // - timestamp immediately after readout
+        // save all at once so we don't get misaligned files
+        this->nrl_data_saver->add(size_save + evts_save + timestamp_save);
     };
 
     // Save buffers 0, 1
