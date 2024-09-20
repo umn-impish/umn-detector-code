@@ -61,7 +61,7 @@ void HafxControl::restart_trace() {
     driver->write(FPGA_ACTION_START_NEW_TRACE_ACQUISITION, MemoryType::ram);
 }
 
-uint16_t HafxControl::check_trace_done() {
+bool HafxControl::check_trace_done() {
     using namespace SipmUsb;
     FpgaResults res{};
     driver->read(res, SipmUsb::MemoryType::ram);

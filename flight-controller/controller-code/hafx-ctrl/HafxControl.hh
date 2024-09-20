@@ -22,7 +22,7 @@ public:
     void restart_time_slice_or_histogram();
     void restart_list();
     void restart_trace();
-    uint16_t check_trace_done();
+    bool check_trace_done();
     void poll_save_time_slice();
 
     // debug, settings

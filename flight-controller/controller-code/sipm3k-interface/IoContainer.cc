@@ -14,7 +14,7 @@ namespace SipmUsb
         return ss.str();
     }
 
-    uint16_t FpgaResults::trace_done() const {
+    bool FpgaResults::trace_done() const {
         auto res = registers[2];
         return static_cast<bool>(res & 4);
     }

@@ -328,15 +328,23 @@ void DetectorService::x123_debug(dm::X123Debug cmd) {
 }
 
 void DetectorService::handle_command(dm::QueryTraceAcquisition cmd) {
-    using trace_t = SipmUsb::FpgaOscilloscopeTrace;
-    
-    uint16_t trace_done = hafx_ctrl.at(cmd.ch)->check_trace_done();
-
-    if (trace_done) {
-        hafx_ctrl.at(cmd.ch)->read_save_debug<trace_t>();
-    } else {
-        log_error("Trace did not complete before save attempt");
+    /*
+     * Query an FPGA oscilloscope trace a few times until we 
+     * are certain it's gonna fail, or until we get a trace.
+     */
+    auto TIME_LIMIT = 5s;
+    auto then = std::chrono::system_clock::now();
+    while ((std::chrono::system_clock::now() - then) < TIME_LIMIT) {
+        auto trace_done = hafx_ctrl.at(cmd.ch)->check_trace_done();
+        if (trace_done) {
+            using trace_t = SipmUsb::FpgaOscilloscopeTrace;
+            hafx_ctrl.at(cmd.ch)->read_save_debug<trace_t>();
+            return;
+        }
+        std::this_thread::sleep_for(100ms);
     }
+
+    throw DetectorException{"Can't get trace after the time limit (5s)"};
 }
 
 void DetectorService::handle_command(dm::QueryListMode cmd) {
