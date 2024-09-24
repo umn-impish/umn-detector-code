@@ -55,10 +55,10 @@ echo "settings-update hafx x1 arm_ctrl $arm_ctrl" > $det_udp_dev
 generate-impress-bin-txt
 # generates a file called bin-map.txt
 # with the latest 2048-ADC to 123-bin conversion
-# change some txt in the bin-map so we can cat it directly to the service port
 
+# add some text in the bin-map.txt so we can cat it directly to the service port
 echo -n "settings-update hafx c1 adc_rebin_edges " | cat - bin-map.txt > temp.txt && mv temp.txt bin-map.txt
-# cat it
+# cat it to c1 detector 1st
 cat bin-map.txt > $det_udp_dev
 
 # edit the detector identifier with some magic
@@ -68,7 +68,7 @@ sed -i '1s/^\(.\{21\}\).\{2\}/\1m5/' bin-map.txt
 cat bin-map.txt > $det_udp_dev
 sed -i '1s/^\(.\{21\}\).\{2\}/\1x1/' bin-map.txt
 cat bin-map.txt > $det_udp_dev
+
 rm 'bin-map.txt'
-# ---
 
 echo "sleep" > $det_udp_dev

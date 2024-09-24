@@ -1,4 +1,3 @@
-import numpy as np
 import datetime as dt
 
 DATE_FMT = '%Y-%j-%H-%M-%S'

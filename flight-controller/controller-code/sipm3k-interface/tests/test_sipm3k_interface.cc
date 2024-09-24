@@ -94,7 +94,7 @@ TEST(sipm3k, TimeSliceRead) {
     EXPECT_LE(buff_num, 256) << "buffer number was crap data";
 }
 
-TEST(sipm3k, TraceDone) {
+TEST(sipm3k, TraceDoneAndAcquire) {
     using namespace SipmUsb;
     auto driv = get_usb_manager();
     
@@ -106,13 +106,28 @@ TEST(sipm3k, TraceDone) {
 
     FpgaResults res{};
 
-    driv->read(res, MemoryType::ram);
-    auto trace_done = res.trace_done();
+    bool done = false;
+    int i = 0;
+    while (!done && i < 10) {
+        driv->read(res, MemoryType::ram);
+        done = res.trace_done();
+        std::this_thread::sleep_for(1s);
+        ++i;
+    }
 
-    EXPECT_EQ(1, trace_done) << "Trace did not complete in 1 second";
+    EXPECT_EQ(1, done) << "Trace must be acquired by end of test (wtf)";
+
+    auto trace = FpgaOscilloscopeTrace{};
+    driv->read(trace, MemoryType::ram);
+    for (const auto& datapt : trace.registers) {
+        std::cout << datapt << ' ';
+    }
+    std::cout << std::endl;
+    SUCCEED();
 }
 
-// TODO NRL mode test
+// TODO add more tests for each container
+// maybe template?
 
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);

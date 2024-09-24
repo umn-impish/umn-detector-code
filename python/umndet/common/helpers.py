@@ -1,3 +1,12 @@
+'''
+Helper functions for reading in binary data files
+into structured data.
+
+Each defined type of data file is read using the
+function corresponding to it, which wraps
+part of generic_read_binary or read_binary,
+depending on the data structure in the binary data.
+'''
 import ctypes
 import struct
 import umndet.common.impress_exact_structs as ies
@@ -67,7 +76,7 @@ def read_x123_debug(fn: str, open_func: Callable) -> list[ies.X123Debug]:
 def read_hafx_debug(fn: str, open_func: Callable) -> list[ies.HafxDebug]:
     def read_elt(f: IO[bytes]):
         type_, = struct.unpack('<B', f.read(1))
-        sz = struct.calcsize(ies.HafxDebug.DECODE_MAP[type_])
+        sz = struct.calcsize(ies.HafxDebug.TYPE_DECODE_MAP[type_][1])
         bytes_ = f.read(sz)
         return ies.HafxDebug(type_, bytes_)
     return generic_read_binary(fn, open_func, read_elt)

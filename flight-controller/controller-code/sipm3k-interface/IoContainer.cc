@@ -16,8 +16,8 @@ namespace SipmUsb
     }
 
     bool FpgaResults::trace_done() const {
-        // trace_done in bit 2 of results register
-        return static_cast<bool>((registers[2] >> 2) & 0x1);
+        auto res = registers[2];
+        return static_cast<bool>(res & 4);
     }
 
     uint16_t FpgaResults::num_avail_time_slices() const {
