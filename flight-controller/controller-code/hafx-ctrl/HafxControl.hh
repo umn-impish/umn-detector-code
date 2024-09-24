@@ -12,6 +12,11 @@
 namespace Detector
 {
 
+// Reduce the NRL native 11-byte frame to a
+// smaller one
+std::vector<DetectorMessages::StrippedNrlDataPoint>
+strip_nrl_data(std::vector<SipmUsb::NrlListDataPoint>&& vec);
+
 class HafxControl {
 public:
     HafxControl(std::shared_ptr<SipmUsb::UsbManager> driver_, DetectorPorts ports);
@@ -20,9 +25,11 @@ public:
     generate_health();
 
     void restart_time_slice_or_histogram();
-    void restart_list();
+    void restart_list_mode();
     void restart_trace();
     bool check_trace_done();
+    void swap_nrl_buffer(uint8_t buf_num);
+    void poll_save_nrl_list();
     void poll_save_time_slice();
 
     // debug, settings
@@ -33,7 +40,7 @@ public:
     template <class ConT>
     void read_save_debug();
 
-    std::optional<time_t> data_time_anchor();
+    std::optional<time_t> data_time_anchor() const;
     void data_time_anchor(std::optional<time_t> new_anchor);
 private:
     std::shared_ptr<SipmUsb::UsbManager> driver;
@@ -44,10 +51,14 @@ private:
 
     using science_t = DetectorMessages::HafxNominalSpectrumStatus;
     std::unique_ptr<QueuedDataSaver<science_t> > science_saver;
+    std::unique_ptr<DataSaver> nrl_data_saver;
     std::unique_ptr<DataSaver> debug_saver;
 
     DetectorMessages::HafxNominalSpectrumStatus
     read_time_slice();
+
+    std::vector<SipmUsb::NrlListDataPoint>
+    read_nrl_buffer();
 
     void save_settings(const DetectorMessages::HafxSettings& settings);
     void send_off_settings();

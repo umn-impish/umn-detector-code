@@ -60,6 +60,10 @@ void DetectorService::evt_loop_step() {
                     push_message(dm::StopNominal{});
                     push_message(dm::CollectNominal{.started = false});
                 }
+                if (taking_nrl_data()) {
+                    push_message(dm::StopNrlList{});
+                    push_message(dm::StartNrlList{.started = false});
+                }
             }
         }
         catch (const std::exception& e) {
@@ -283,7 +287,7 @@ void DetectorService::handle_command(dm::HafxDebug cmd) {
         );
     }
     else if (acq_type == dbr_t::Type::ListMode) {
-        ctrl->restart_list();
+        ctrl->restart_list_mode();
         hafx_debug_list_timer = TimerLifetime::create(
             queue.push_delay(dm::QueryListMode{cmd.ch}, delay)
         );
@@ -459,7 +463,53 @@ void DetectorService::handle_command(dm::StopNominal) {
     nominal_timer = nullptr;
 }
 
-// TODO: NRL LIST MODE
+void DetectorService::check_save_nrl_buffers() {
+    for (const auto& [_, ctrl] : hafx_ctrl) {
+        try {
+            ctrl->poll_save_nrl_list();
+        }
+        catch (std::runtime_error const& e) {
+            throw ReconnectDetectors{"hafx issue: " + std::string{e.what()}};
+        }
+    }
+}
+
+void DetectorService::start_nrl_list_mode() {
+    await_pps_edge();
+    // wait for pps before starting because its pretty cool to do that B)
+    for (auto& [_, ctrl] : hafx_ctrl) {
+        // clear both NRL buffers
+        ctrl->swap_nrl_buffer(0);
+        ctrl->restart_list_mode();
+
+        ctrl->swap_nrl_buffer(1);
+        ctrl->restart_list_mode();
+    }
+}
+
+void DetectorService::handle_command(dm::StartNrlList cmd) {
+    // copied format from Time slice stuff above
+    auto finish = [this](auto cmd) {
+        constexpr auto CHECK_BUFFER_FULL_DELAY = 250ms;
+        hafx_nrl_list_timer = TimerLifetime::create(
+            queue.push_delay(cmd, CHECK_BUFFER_FULL_DELAY)
+        );
+    };
+
+    if (not cmd.started) {
+        start_nrl_list_mode();
+        cmd.started = true;
+        finish(cmd);
+        return;
+    }
+
+    check_save_nrl_buffers();
+    finish(cmd);
+}
+
+void DetectorService::handle_command(dm::StopNrlList) {
+    hafx_nrl_list_timer = nullptr;
+}
 
 void DetectorService::push_message(DetectorService::Message m) {
     queue.push(std::move(m));
@@ -467,6 +517,10 @@ void DetectorService::push_message(DetectorService::Message m) {
 }
 bool DetectorService::taking_nominal_data() {
     return (nominal_timer != nullptr);
+}
+
+bool DetectorService::taking_nrl_data() {
+    return (hafx_nrl_list_timer != nullptr);
 }
 
 bool DetectorService::alive() const {

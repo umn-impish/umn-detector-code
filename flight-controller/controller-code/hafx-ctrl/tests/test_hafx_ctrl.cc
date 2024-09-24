@@ -13,6 +13,7 @@ constexpr unsigned short science_port = 30000;
 constexpr unsigned short debug_port = 31000;
 
 std::unique_ptr<Detector::HafxControl> get_test_hafx_ctrl() {
+
     SipmUsb::BridgeportDeviceManager device_manager;
 
     for (auto [_, man] : device_manager.device_map) {
@@ -80,9 +81,9 @@ TEST(HafxCtrl, OperationRestarts) {
      */
     auto ctrl = get_test_hafx_ctrl();
     ctrl->restart_time_slice_or_histogram();
-    ctrl->restart_list();
+    ctrl->restart_list_mode();
     ctrl->restart_time_slice_or_histogram();
-    ctrl->restart_list();
+    ctrl->restart_list_mode();
 
     // No exception = good
     SUCCEED();
@@ -173,6 +174,17 @@ TEST(HafxCtrl, DebugCollections) {
     ctrl->read_save_debug<SipmUsb::FpgaCtrl>();
     ctrl->read_save_debug<SipmUsb::ArmStatus>();
     ctrl->read_save_debug<SipmUsb::ArmCal>();
+}
+
+TEST(HafxCtrl, SwapBuffer) {
+    auto ctrl = get_test_hafx_ctrl();
+    //see if it can read out registers, swap one bit and write back
+    // could need to make this test better
+    ctrl->swap_nrl_buffer(0);
+    ctrl->swap_nrl_buffer(1);
+    ctrl->swap_nrl_buffer(0);
+    ctrl->swap_nrl_buffer(1);
+    ctrl->swap_nrl_buffer(1);
 }
 
 int main(int argc, char *argv[]) {

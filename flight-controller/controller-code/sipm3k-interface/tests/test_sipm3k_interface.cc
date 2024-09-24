@@ -6,11 +6,13 @@
 #include <IoContainer.hh>
 
 std::shared_ptr<SipmUsb::UsbManager> get_usb_manager() {
+    // std::string TEST_SERIAL{"7A65CD294A344E51202020412B244FF"};
     SipmUsb::BridgeportDeviceManager device_manager;
-    for (auto [_, dev]: device_manager.device_map) {
-        return dev;
+    // take first availabe device
+    for (auto [_, man] : device_manager.device_map) {
+        return man;
     }
-    throw std::runtime_error{"nothing plugged in"};
+    throw std::runtime_error{"no device connected"};
 }
 
 template<class con_t>

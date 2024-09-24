@@ -71,5 +71,4 @@ cat bin-map.txt > $det_udp_dev
 
 rm 'bin-map.txt'
 
-
 echo "sleep" > $det_udp_dev
