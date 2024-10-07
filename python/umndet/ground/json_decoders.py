@@ -3,7 +3,7 @@ import datetime as dt
 import json
 import gzip
 import numpy as np
-
+import datetime
 from umndet.common import helpers as hp
 import umndet.common.constants as umncon
 
@@ -241,3 +241,57 @@ def collapse_health(dat: list[dict[str, object]]) -> list[dict[str, object]]:
     }
     return ret
 
+def decode_exact_sci():
+    '''
+    :P It's really ugly but it works
+    There probably a little but of unintended behavior
+    I have not looekd at every single data entry in the json to compare times
+    '''
+    p = argparse.ArgumentParser(
+        description='Decode EXACT science files to JSON')
+    p.add_argument(
+        'files', nargs='+',
+        help='files to decode to JSON')
+    p.add_argument(
+        'output_fn',
+        help='output file name to write JSON')
+    args = p.parse_args()
+    exact_data, jsonified, pps, pps_times, times, anchor, abs_times = [], [], [], [], [], [], []
+
+    for fn in args.files:
+        exact_data += hp.read_stripped_nrl_list(fn, gzip.open)
+    for j in range(len(exact_data)):
+        # get relative timestamp and pps times
+        times = [r.relative_timestamp for r in exact_data[j]['events']]
+        for i, e in enumerate(exact_data[j]['events']):
+            if not e.was_pps: continue
+            pps_times.append(e.relative_timestamp)
+
+        # do a bunch of stuff to convert from relative timestamp to absolute timestamp
+        # assumes last pps aligns with anchor 
+
+        time_after = exact_data[j]['unix_time']
+        last_pps = pps_times[-1]
+        adjusted = [t - last_pps for t in times]
+        deltas = [datetime.timedelta(microseconds=t/5) for t in adjusted]
+        anchor = datetime.datetime.utcfromtimestamp(time_after)
+
+        # get abs_times from anchor and deltas then convert to str
+        abs_times = [(anchor + d).strftime('%Y-%j-%H-%M-%S%f') for d in deltas]
+
+        # make usable
+        exact_data[j]['events'] = [events.to_json() for events in exact_data[j]['events']]
+        # Swap relative timestamp for absolute timestamp
+        for k in range(len(exact_data[j]['events'])):
+            exact_data[j]['events'][k]['relative_timestamp'] = abs_times[k]
+            if 'relative_timestamp' in exact_data[j]['events'][k]:
+                # most beautiful line ever \/
+                # there is probably a better way to rename the dict entry but ¯\(ツ)/¯
+                exact_data[j]['events'][k]['absolute_timestamp'] = exact_data[j]['events'][k].pop('relative_timestamp')
+
+        jsonified += [exact_data[j]]
+        #clear for reuse next loop
+        abs_times = []
+
+    with open(args.output_fn, 'w') as f:
+        json.dump(jsonified, f)
