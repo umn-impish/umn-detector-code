@@ -260,3 +260,5 @@ class StrippedNrlDataPoint(ctypes.LittleEndianStructure):
         ('out_of_range', ctypes.c_uint32, 1),
     )
 
+    def to_json(self):
+        return {field[0]: getattr(self, field[0]) for field in self._fields_}

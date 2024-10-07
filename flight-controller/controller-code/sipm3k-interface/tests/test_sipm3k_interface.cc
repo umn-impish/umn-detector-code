@@ -126,6 +126,42 @@ TEST(sipm3k, TraceDoneAndAcquire) {
     SUCCEED();
 }
 
+TEST(sipm3k, FillListBufferAndRead) {
+    using namespace SipmUsb;
+    auto driv = get_usb_manager();
+    // add test for buffer 1?
+    FpgaCtrl cont;
+    driv->read(cont, MemoryType::nvram);
+    auto reg = cont.registers[15];
+    reg = reg & ~4;
+    cont.registers[15] = reg;
+    driv->write(cont, MemoryType::nvram);
+    driv->write(FPGA_ACTION_START_NEW_LIST_ACQUISITION, MemoryType::ram);
+
+    using namespace std::chrono_literals;
+
+    FpgaResults res{};
+
+    bool done = false;
+    int i = 0;
+    while(!done && i < 30) {
+        driv->read(res, MemoryType::ram);
+        done = res.nrl_buffer_full(0);
+        std::this_thread::sleep_for(1s);
+        i++;
+    }
+    EXPECT_EQ(1, done) << "buffer 0 did not fill in 30 seconds";
+
+    FpgaLmNrl1 out;
+    driv->read(out, MemoryType::ram);
+    auto decoded = out.decode();
+    std::cout << "NUM EVENTS" << decoded.size() << std::endl;
+    EXPECT_GE(decoded.size(), 2045) << "Buffer contains too little events"; // this number can change. 2045 seems to be the lowest I saw over ~20 saves.
+    EXPECT_LE(decoded.size(), 2047) << "Buffer (impossibly) containts too many events";
+    SUCCEED();
+}
+
+
 // TODO add more tests for each container
 // maybe template?
 
