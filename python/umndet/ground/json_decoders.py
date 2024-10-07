@@ -262,8 +262,7 @@ def decode_exact_sci():
         exact_data += hp.read_stripped_nrl_list(fn, gzip.open)
     for j in range(len(exact_data)):
         # get relative timestamp and pps times
-        times.append([r.relative_timestamp for r in exact_data[j]['events']])
-        pps += [e.was_pps for e in exact_data[j]['events']]
+        times = [r.relative_timestamp for r in exact_data[j]['events']]
         for i, e in enumerate(exact_data[j]['events']):
             if not e.was_pps: continue
             pps_times.append(e.relative_timestamp)
@@ -273,13 +272,12 @@ def decode_exact_sci():
 
         time_after = exact_data[j]['unix_time']
         last_pps = pps_times[-1]
-        adjusted = [t - last_pps for t in times[j]]
+        adjusted = [t - last_pps for t in times]
         deltas = [datetime.timedelta(microseconds=t/5) for t in adjusted]
-        anchor.append(datetime.datetime.utcfromtimestamp(time_after))
+        anchor = datetime.datetime.utcfromtimestamp(time_after)
 
         # get abs_times from anchor and deltas then convert to str
-        for k in range(len(deltas)):
-            abs_times.append((anchor[j] + deltas[k]).strftime('%Y-%j-%H-%M-%S%f'))
+        abs_times = [(anchor + d).strftime('%Y-%j-%H-%M-%S%f') for d in deltas]
 
         # make usable
         exact_data[j]['events'] = [events.to_json() for events in exact_data[j]['events']]
