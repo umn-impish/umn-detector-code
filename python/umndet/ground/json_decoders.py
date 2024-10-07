@@ -297,24 +297,3 @@ def decode_exact_sci():
 
     with open(args.output_fn, 'w') as f:
         json.dump(jsonified, f)
-
-
-if __name__ == '__main__':
-    print(" 1 for decoding health packets ")
-    print(" 2 for decoding x123 science ")
-    print(" 3 for hafx debug histogram ")
-    print(" 4 for hafx time slice ")
-    print(" 5 for exact science data")
-    dtype = int(input("Please decode type (1-5): "))
-    if dtype == 1:
-        decode_health()
-    elif dtype == 2:
-        decode_x123_sci()
-    elif dtype == 3:
-        decode_hafx_debug_hist()
-    elif dtype == 4:
-        decode_hafx_sci()
-    elif dtype == 5:
-        decode_exact_sci()
-    else:
-        print("Please enter a valid decode type (1-4)")
