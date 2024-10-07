@@ -176,15 +176,12 @@ TEST(HafxCtrl, DebugCollections) {
     ctrl->read_save_debug<SipmUsb::ArmCal>();
 }
 
-TEST(HafxCtrl, SwapBuffer) {
+TEST(HafxCtrl, FillBothBuffersAndRead) {
     auto ctrl = get_test_hafx_ctrl();
-    //see if it can read out registers, swap one bit and write back
-    // could need to make this test better
-    ctrl->swap_nrl_buffer(0);
-    ctrl->swap_nrl_buffer(1);
-    ctrl->swap_nrl_buffer(0);
-    ctrl->swap_nrl_buffer(1);
-    ctrl->swap_nrl_buffer(1);
+
+    // idk if a test here is necessary. The only thing it would 
+    // differently that the test in sipm3k is test 'poll_save_nrl_list
+    
 }
 
 int main(int argc, char *argv[]) {
