@@ -256,28 +256,40 @@ def decode_exact_sci():
         'output_fn',
         help='output file name to write JSON')
     args = p.parse_args()
-    exact_data, jsonified, pps, pps_times, times, anchor, abs_times = [], [], [], [], [], [], []
+    exact_data, jsonified, pps_indices, pps_times, times, anchor, abs_times = [], [], [], [], [], [], []
 
     for fn in args.files:
         exact_data += hp.read_stripped_nrl_list(fn, gzip.open)
     for j in range(len(exact_data)):
         # get relative timestamp and pps times
         times = [r.relative_timestamp for r in exact_data[j]['events']]
+
+        # correct for looping of the relative timestamp
+        corrected_times = times.copy()
+        rel_stamp_loops = 0
+        for i in range(1,len(times)):
+            if times[i] < times[i-1]:
+                rel_stamp_loops += 1
+            corrected_times[i] = times[i] + rel_stamp_loops * (2**25-1)
+
         for i, e in enumerate(exact_data[j]['events']):
             if not e.was_pps: continue
             pps_times.append(e.relative_timestamp)
+            pps_indices.append(i)
 
         # do a bunch of stuff to convert from relative timestamp to absolute timestamp
         # assumes last pps aligns with anchor 
 
+        # get corrected last pps, if not corrected all times are off by 'rel_stamp_loops' amount of cycles
         time_after = exact_data[j]['unix_time']
-        last_pps = pps_times[-1]
-        adjusted = [t - last_pps for t in times]
+        adjusted_last_pps = corrected_times[pps_indices[-1]]
+
+        adjusted = [t - adjusted_last_pps for t in corrected_times]
         deltas = [datetime.timedelta(microseconds=t/5) for t in adjusted]
-        anchor = datetime.datetime.utcfromtimestamp(time_after)
+        anchor = datetime.datetime.fromtimestamp(time_after, datetime.UTC)
 
         # get abs_times from anchor and deltas then convert to str
-        abs_times = [(anchor + d).strftime('%Y-%j-%H-%M-%S%f') for d in deltas]
+        abs_times = [(anchor + d).strftime('%Y-%j-%H-%M-%S-%f') for d in deltas]
 
         # make usable
         exact_data[j]['events'] = [events.to_json() for events in exact_data[j]['events']]
@@ -295,3 +307,23 @@ def decode_exact_sci():
 
     with open(args.output_fn, 'w') as f:
         json.dump(jsonified, f)
+
+if __name__ == '__main__':
+    print(" 1 for decoding health packets ")
+    print(" 2 for decoding x123 science ")
+    print(" 3 for hafx debug histogram ")
+    print(" 4 for hafx time slice ")
+    print(" 5 for exact science data")
+    dtype = int(input("Please decode type (1-5): "))
+    if dtype == 1:
+        decode_health()
+    elif dtype == 2:
+        decode_x123_sci()
+    elif dtype == 3:
+        decode_hafx_debug_hist()
+    elif dtype == 4:
+        decode_hafx_sci()
+    elif dtype == 5:
+        decode_exact_sci()
+    else:
+        print("Please enter a valid decode type (1-4)")
