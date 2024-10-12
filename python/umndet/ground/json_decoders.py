@@ -5,6 +5,7 @@ import gzip
 import numpy as np
 import datetime
 from umndet.common import helpers as hp
+from umndet.common import impress_exact_structs as ies
 import umndet.common.constants as umncon
 
 # Monkeypatch JSON to output only 2 decmials
@@ -242,10 +243,10 @@ def collapse_health(dat: list[dict[str, object]]) -> list[dict[str, object]]:
     return ret
 
 def decode_exact_sci():
-    '''
-    :P It's really ugly but it works
-    There probably a little but of unintended behavior
-    I have not looekd at every single data entry in the json to compare times
+    '''Decodes specifically 4 Byte 'stripped' NRL List mode data. 
+    Assumes the last PPS lines up with the unix time that is placed on while saving. 
+    Corrects for timestamp looping and then formats to absolute times based on the unix time.
+    Formats absolute times as: YYYY-DDD-HH-MM-SS_NNNNNNNNN
     '''
     p = argparse.ArgumentParser(
         description='Decode EXACT science files to JSON')
@@ -256,74 +257,91 @@ def decode_exact_sci():
         'output_fn',
         help='output file name to write JSON')
     args = p.parse_args()
-    exact_data, jsonified, pps_indices, pps_times, times, anchor, abs_times = [], [], [], [], [], [], []
 
+    jsonified = list()
     for fn in args.files:
-        exact_data += hp.read_stripped_nrl_list(fn, gzip.open)
-    for j in range(len(exact_data)):
-        # get relative timestamp and pps times
-        times = [r.relative_timestamp for r in exact_data[j]['events']]
-
-        # correct for looping of the relative timestamp
-        corrected_times = times.copy()
-        rel_stamp_loops = 0
-        for i in range(1,len(times)):
-            if times[i] < times[i-1]:
-                rel_stamp_loops += 1
-            corrected_times[i] = times[i] + rel_stamp_loops * (2**25-1)
-
-        for i, e in enumerate(exact_data[j]['events']):
-            if not e.was_pps: continue
-            pps_times.append(e.relative_timestamp)
-            pps_indices.append(i)
-
-        # do a bunch of stuff to convert from relative timestamp to absolute timestamp
-        # assumes last pps aligns with anchor 
-
-        # get corrected last pps, if not corrected all times are off by 'rel_stamp_loops' amount of cycles
-        time_after = exact_data[j]['unix_time']
-        adjusted_last_pps = corrected_times[pps_indices[-1]]
-
-        adjusted = [t - adjusted_last_pps for t in corrected_times]
-        deltas = [datetime.timedelta(microseconds=t/5) for t in adjusted]
-        anchor = datetime.datetime.fromtimestamp(time_after, datetime.UTC)
-
-        # get abs_times from anchor and deltas then convert to str
-        abs_times = [(anchor + d).strftime('%Y-%j-%H-%M-%S-%f') for d in deltas]
-
-        # make usable
-        exact_data[j]['events'] = [events.to_json() for events in exact_data[j]['events']]
-        # Swap relative timestamp for absolute timestamp
-        for k in range(len(exact_data[j]['events'])):
-            exact_data[j]['events'][k]['relative_timestamp'] = abs_times[k]
-            if 'relative_timestamp' in exact_data[j]['events'][k]:
-                # most beautiful line ever \/
-                # there is probably a better way to rename the dict entry but ¯\(ツ)/¯
-                exact_data[j]['events'][k]['absolute_timestamp'] = exact_data[j]['events'][k].pop('relative_timestamp')
-
-        jsonified += [exact_data[j]]
-        #clear for reuse next loop
-        abs_times = []
+        cur_buffers = hp.read_stripped_nrl_list(fn, gzip.open)
+        for buffer in cur_buffers:
+            jsonified += jsonify_exact_buffer(buffer)
 
     with open(args.output_fn, 'w') as f:
         json.dump(jsonified, f)
 
-if __name__ == '__main__':
-    print(" 1 for decoding health packets ")
-    print(" 2 for decoding x123 science ")
-    print(" 3 for hafx debug histogram ")
-    print(" 4 for hafx time slice ")
-    print(" 5 for exact science data")
-    dtype = int(input("Please decode type (1-5): "))
-    if dtype == 1:
-        decode_health()
-    elif dtype == 2:
-        decode_x123_sci()
-    elif dtype == 3:
-        decode_hafx_debug_hist()
-    elif dtype == 4:
-        decode_hafx_sci()
-    elif dtype == 5:
-        decode_exact_sci()
-    else:
-        print("Please enter a valid decode type (1-4)")
+
+def jsonify_exact_buffer(buffer: dict[str, object]) -> dict[str, object]:
+    '''Take a list of EXACT NRL buffers which have been read into
+       a dict format of {'timestamp': timestamp, 'buffers': [buffers]}
+       and "jsonify" them into a list of JSON objects
+       represented as dictionaries. 
+    '''
+    all_events, rel_times, pps_indices = \
+        list(), list(), list()
+    for i, e in enumerate(buffer['events']):
+        all_events.append(e)
+        rel_times.append(e.relative_timestamp)
+
+        if not e.was_pps:
+            continue
+        pps_indices.append(i)
+
+    # Correct the timestamps for rollover (see func docstring)
+    rel_times = correct_rel_time_rollover(rel_times)
+
+    # The last PPS event is assumed to be aligned with the
+    # absolute time saved immediately after the buffer readout.
+    # So, we save the values for calibration in the next step.
+    time_after = buffer['unix_time']
+    last_pps_rel_time = rel_times[pps_indices[-1]]
+    anchor = datetime.datetime.fromtimestamp(time_after, datetime.UTC)
+
+    all_events = [events.to_json() for events in all_events]
+
+    # Put the events into a structure with absolute times
+    for (evt, rel_time) in zip(all_events, rel_times):
+        # Remove the relative time key; we will replace it
+        del evt['relative_timestamp']
+
+        # Datetime can't format nanoseconds natively, so add it manually after
+        ns_delta = (rel_time - last_pps_rel_time) * ies.StrippedNrlDataPoint.NS_PER_TICK
+        delta = datetime.timedelta(microseconds=int(ns_delta / 1e3))
+
+        abs_time = (anchor + delta).strftime('%Y-%j-%H-%M-%S')
+        abs_time += f'_{int(ns_delta % 1e9)}'
+        
+        evt['absolute_timestamp'] = abs_time
+    
+    return all_events
+
+
+def correct_rel_time_rollover(rel_times: list[int]) -> list[int]:
+    '''Per NRL buffer, the relative timestamp of list mode events may roll over.
+       Under the assumption that the roll over occurs in less than
+       the maximum value which can be stored in the relative timestamp,
+       we correct the timestamps so they monotonically increase.
+
+       Another way to state this assumption is that the count rate
+       is sufficiently high that when the relative timestamps roll over,
+       it is guaranteed that the roll over shift is exactly the max
+       value storable in the relative timestamp.
+    '''
+    ret = []
+
+    # How much we correct by each time
+    # the timestamp rolls over
+    REL_TS_BITS = ies.StrippedNrlDataPoint._fields_[0][2]
+    ROLLOVER_SHIFT = (2**REL_TS_BITS - 1)
+
+    rel_stamp_loops = 0
+    for i in range(len(rel_times) - 1): # prevent out of range indexing
+        ret.append(rel_times[i] + rel_stamp_loops * ROLLOVER_SHIFT)
+
+        # Check if the next event rolls over, and if so,
+        # indicate that in the tracker variable
+        rollover_happened = (rel_times[i] > rel_times[i+1])
+        if rollover_happened:
+            rel_stamp_loops += 1
+
+    return ret
+
+# TODO : Implement full size list mode decoder
+# Can maybe do by adding an arg to above decoder to change helpers.py decode type (need to add function there too)
