@@ -251,6 +251,7 @@ class HafxDebug:
 
 
 class StrippedNrlDataPoint(ctypes.LittleEndianStructure):
+    NS_PER_TICK = 200
     _pack_ = 1
     _fields_ = (
         ('relative_timestamp', ctypes.c_uint32, 25),
