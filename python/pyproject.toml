@@ -39,3 +39,4 @@ decode-hafx-debug-hist = "umndet.ground.json_decoders:decode_hafx_debug_hist"
 decode-x123-science = "umndet.ground.json_decoders:decode_x123_sci"
 
 decode-exact-science = "umndet.ground.json_decoders:decode_exact_sci"
+decode-exact-debug = "umndet.ground.json_decoders:decode_full_size_exact_sci"

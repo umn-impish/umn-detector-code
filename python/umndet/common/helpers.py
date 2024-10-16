@@ -105,7 +105,24 @@ def read_stripped_nrl_list(fn: str, open_func: Callable) -> list:
         return {'unix_time': timestamp, 'events': evts}
     return generic_read_binary(fn, open_func, read_element)
 
-# TODO: add full size nrl list reader
+def read_full_nrl_list(fn: str, open_func: Callable) -> list:
+    '''
+    Read a file full of full file of full fill nrl data mode list
+    orignal format :)
+    Contains all the data as defined by:
+    https://drive.google.com/file/d/13mLWfhBhoJyiL4Ph0IBVupMZWh-V8y1D/view
+    '''
+    def read_element(f: IO[bytes]):
+        num_events, = struct.unpack('<H', f.read(2))
+        evts = []
+        for _ in range(num_events):
+            d = ies.FullSizeNrlDataPoint()
+            f.readinto(d)
+            evts.append(d)
+        timestamp, = struct.unpack('<L', f.read(4))
+        return {'unix_time': timestamp, 'events': evts}
+    return generic_read_binary(fn, open_func, read_element)
+    
 
 def reverse_bridgeport_mapping(adc_mapping: Iterable[int]) -> list[int]:
     '''
