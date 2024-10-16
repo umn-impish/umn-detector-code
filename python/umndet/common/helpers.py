@@ -105,6 +105,7 @@ def read_stripped_nrl_list(fn: str, open_func: Callable) -> list:
         return {'unix_time': timestamp, 'events': evts}
     return generic_read_binary(fn, open_func, read_element)
 
+# TODO: add full size nrl list reader
 
 def reverse_bridgeport_mapping(adc_mapping: Iterable[int]) -> list[int]:
     '''

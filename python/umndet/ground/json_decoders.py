@@ -243,12 +243,10 @@ def collapse_health(dat: list[dict[str, object]]) -> list[dict[str, object]]:
     return ret
 
 def decode_exact_sci():
-    '''
-    TODO: write a nicer docstring ;)
-
-    :P It's really ugly but it works
-    There probably a little but of unintended behavior
-    I have not looekd at every single data entry in the json to compare times
+    '''Decodes specifically 4 Byte 'stripped' NRL List mode data. 
+    Assumes the last PPS lines up with the unix time that is placed on while saving. 
+    Corrects for timestamp looping and then formats to absolute times based on the unix time.
+    Formats absolute times as: YYYY-DDD-HH-MM-SS_NNNNNNNNN
     '''
     p = argparse.ArgumentParser(
         description='Decode EXACT science files to JSON')
@@ -274,7 +272,7 @@ def jsonify_exact_buffer(buffer: dict[str, object]) -> dict[str, object]:
     '''Take a list of EXACT NRL buffers which have been read into
        a dict format of {'timestamp': timestamp, 'buffers': [buffers]}
        and "jsonify" them into a list of JSON objects
-       represented as dictionaries.
+       represented as dictionaries. 
     '''
     all_events, rel_times, pps_indices = \
         list(), list(), list()
@@ -296,6 +294,8 @@ def jsonify_exact_buffer(buffer: dict[str, object]) -> dict[str, object]:
     last_pps_rel_time = rel_times[pps_indices[-1]]
     anchor = datetime.datetime.fromtimestamp(time_after, datetime.UTC)
 
+    all_events = [events.to_json() for events in all_events]
+
     # Put the events into a structure with absolute times
     for (evt, rel_time) in zip(all_events, rel_times):
         # Remove the relative time key; we will replace it
@@ -305,9 +305,9 @@ def jsonify_exact_buffer(buffer: dict[str, object]) -> dict[str, object]:
         ns_delta = (rel_time - last_pps_rel_time) * ies.StrippedNrlDataPoint.NS_PER_TICK
         delta = datetime.timedelta(microseconds=int(ns_delta / 1e3))
 
-        abs_time = (cur_dtime := (anchor + delta)).strftime('%Y-%j-%H-%M-%S')
-        abs_time += f'_{int((1e9 * cur_dtime.seconds) + ns_delta)}'
-
+        abs_time = (anchor + delta).strftime('%Y-%j-%H-%M-%S')
+        abs_time += f'_{int(ns_delta % 1e9)}'
+        
         evt['absolute_timestamp'] = abs_time
     
     return all_events
@@ -332,7 +332,7 @@ def correct_rel_time_rollover(rel_times: list[int]) -> list[int]:
     ROLLOVER_SHIFT = (2**REL_TS_BITS - 1)
 
     rel_stamp_loops = 0
-    for i in range(len(rel_times)):
+    for i in range(len(rel_times) - 1): # prevent out of range indexing
         ret.append(rel_times[i] + rel_stamp_loops * ROLLOVER_SHIFT)
 
         # Check if the next event rolls over, and if so,
@@ -342,3 +342,6 @@ def correct_rel_time_rollover(rel_times: list[int]) -> list[int]:
             rel_stamp_loops += 1
 
     return ret
+
+# TODO : Implement full size list mode decoder
+# Can maybe do by adding an arg to above decoder to change helpers.py decode type (need to add function there too)
