@@ -262,17 +262,20 @@ def decode_exact_sci():
     for fn in args.files:
         cur_buffers = hp.read_stripped_nrl_list(fn, gzip.open)
         for buffer in cur_buffers:
-            jsonified += jsonify_exact_buffer(buffer)
+            jsonified += jsonify_exact_buffer(buffer, 0)
 
     with open(args.output_fn, 'w') as f:
         json.dump(jsonified, f)
 
 
-def jsonify_exact_buffer(buffer: dict[str, object]) -> dict[str, object]:
+def jsonify_exact_buffer(buffer: dict[str, object], nrl_size: int) -> dict[str, object]:
     '''Take a list of EXACT NRL buffers which have been read into
        a dict format of {'timestamp': timestamp, 'buffers': [buffers]}
        and "jsonify" them into a list of JSON objects
        represented as dictionaries. 
+
+       nrl_size = 0 for 4B data points
+                = !0 for 12B data points
     '''
     all_events, rel_times, pps_indices = \
         list(), list(), list()
@@ -285,7 +288,10 @@ def jsonify_exact_buffer(buffer: dict[str, object]) -> dict[str, object]:
         pps_indices.append(i)
 
     # Correct the timestamps for rollover (see func docstring)
-    rel_times = correct_rel_time_rollover(rel_times)
+    if nrl_size == 0:
+        rel_times = correct_rel_time_rollover(rel_times)
+    # there is no point to even attempt to correct for full size data 
+    # because its clock has such an obscenely large range
 
     # The last PPS event is assumed to be aligned with the
     # absolute time saved immediately after the buffer readout.
@@ -300,9 +306,14 @@ def jsonify_exact_buffer(buffer: dict[str, object]) -> dict[str, object]:
     for (evt, rel_time) in zip(all_events, rel_times):
         # Remove the relative time key; we will replace it
         del evt['relative_timestamp']
+        if nrl_size != 0:
+            del evt['padding']
 
         # Datetime can't format nanoseconds natively, so add it manually after
-        ns_delta = (rel_time - last_pps_rel_time) * ies.StrippedNrlDataPoint.NS_PER_TICK
+        if nrl_size != 0:
+            ns_delta = (rel_time - last_pps_rel_time) * ies.FullSizeNrlDataPoint.NS_PER_TICK
+        else:
+            ns_delta = (rel_time - last_pps_rel_time) * ies.StrippedNrlDataPoint.NS_PER_TICK
         delta = datetime.timedelta(microseconds=int(ns_delta / 1e3))
 
         abs_time = (anchor + delta).strftime('%Y-%j-%H-%M-%S')
@@ -343,5 +354,25 @@ def correct_rel_time_rollover(rel_times: list[int]) -> list[int]:
 
     return ret
 
-# TODO : Implement full size list mode decoder
-# Can maybe do by adding an arg to above decoder to change helpers.py decode type (need to add function there too)
+def decode_full_size_exact_sci():
+    '''Do same stuff as above but for full size data points (12B per event)
+    Will not correct for timestamp rollover because there is no point
+    '''
+    p = argparse.ArgumentParser(
+        description='Decode full size EXACT science files to JSON')
+    p.add_argument(
+        'files', nargs='+',
+        help='files to decode to JSON')
+    p.add_argument(
+        'output_fn',
+        help='output file name to write JSON')
+    args = p.parse_args()
+
+    jsonified = list()
+    for fn in args.files:
+        cur_buffers = hp.read_full_nrl_list(fn, gzip.open)
+        for buffer in cur_buffers:
+            jsonified += jsonify_exact_buffer(buffer, 1) # 1 is simple
+
+    with open(args.output_fn, 'w') as f:
+        json.dump(jsonified, f)
