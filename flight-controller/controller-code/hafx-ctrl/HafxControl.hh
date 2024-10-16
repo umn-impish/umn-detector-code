@@ -30,6 +30,7 @@ public:
     bool check_trace_done();
     void swap_nrl_buffer(uint8_t buf_num);
     void poll_save_nrl_list();
+    void poll_save_full_size_nrl_list();
     void poll_save_time_slice();
 
     // debug, settings

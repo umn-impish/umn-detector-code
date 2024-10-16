@@ -35,6 +35,7 @@ public:
         DetectorMessages::StopPeriodicHealth,
         DetectorMessages::CollectNominal,
         DetectorMessages::StopNominal,
+        DetectorMessages::Start_Debug_NrlList,
         DetectorMessages::StartNrlList,
         DetectorMessages::StopNrlList,
         DetectorMessages::PromiseWrap
@@ -104,6 +105,7 @@ private:
     void handle_command(DetectorMessages::CollectNominal cmd);
     void handle_command(DetectorMessages::StartNrlList cmd);
     void handle_command(DetectorMessages::StopNrlList cmd);
+    void handle_command(DetectorMessages::Start_Debug_NrlList cmd);
     void handle_command(DetectorMessages::PromiseWrap msg);
 
     // implementations & helpers for `handle_command`s
@@ -120,6 +122,7 @@ private:
     void read_all_time_slices();
     void start_nrl_list_mode();
     void check_save_nrl_buffers();
+    void check_save_nrl_full_size_buffers();
     void reconnect_detectors();
     void x123_debug(DetectorMessages::X123Debug);
 };

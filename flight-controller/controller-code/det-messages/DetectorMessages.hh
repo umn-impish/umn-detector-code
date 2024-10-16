@@ -98,6 +98,7 @@ namespace DetectorMessages {
     struct ImmediateHafxTimeSliceRead { };
 
     struct StartNrlList { bool started = false; };
+    struct Start_Debug_NrlList { bool started = false; };
     struct StopNrlList { };
 
     struct __attribute__((packed)) HafxHealth {
@@ -157,6 +158,7 @@ namespace DetectorMessages {
         CollectNominal,
         StopNominal,
         StartNrlList,
+        Start_Debug_NrlList,
         StopNrlList,
         X123Settings,
         HafxSettings,

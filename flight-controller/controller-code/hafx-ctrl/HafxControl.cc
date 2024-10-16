@@ -1,4 +1,4 @@
-  #include <HafxControl.hh>
+#include <HafxControl.hh>
 #include <logging.hh>
 #include <sstream>
 
@@ -162,7 +162,7 @@ void HafxControl::poll_save_nrl_list() {
      * if they are.
      */
     using namespace SipmUsb;
-
+    
     FpgaResults fpga_res_con;
     driver->read(fpga_res_con, MemoryType::ram);
     uint32_t time_after_read = time(NULL);
@@ -206,12 +206,66 @@ void HafxControl::poll_save_nrl_list() {
         // - data
         // - timestamp immediately after readout
         // save all at once so we don't get misaligned files
-        this->nrl_data_saver->add(size_save + evts_save + timestamp_save);
+        this->debug_saver->add(size_save + evts_save + timestamp_save);
     };
 
     // Save buffers 0, 1
     save(0);
     save(1);
+}
+
+void HafxControl::poll_save_full_size_nrl_list() {
+    using namespace SipmUsb;
+
+    FpgaResults fpga_res_con;
+    driver->read(fpga_res_con, MemoryType::ram);
+    uint32_t time_after_read = time(NULL);
+
+    auto save_full_size_nrl = [&](auto buf_num) {
+        auto full = fpga_res_con.nrl_buffer_full(buf_num);
+        if (!full) return;
+        log_debug(std::to_string(buf_num) + " is full");
+#if 1
+        this->swap_nrl_buffer(buf_num);
+        auto data = this->read_nrl_buffer();
+        // If there is no PPS in the data,
+        // we can't use it. So, discard it.
+        bool has_pps = false; 
+        for (const auto& d : data) {
+            has_pps = has_pps || d.was_pps;
+        }
+        if (!has_pps) {
+            log_info("there was no PPS");
+            return;
+        }
+#endif
+        auto full_save = std::string{
+            reinterpret_cast<const char*>(data.data()), 
+            data.size() * sizeof(decltype(data)::value_type)
+        };
+
+        // Put some metadata into strings to save
+        uint16_t full_len = static_cast<uint16_t>(data.size());
+        auto full_size_save = std::string{
+            reinterpret_cast<const char*>(&full_len),
+            sizeof(full_len)
+        };
+        auto timestamp_save = std::string{
+            reinterpret_cast<const char*>(&time_after_read),
+            sizeof(time_after_read)
+        };
+
+        // Save order:
+        // - # of events recorded
+        // - data
+        // - timestamp immediately after readout
+        // save all at once so we don't get misaligned files
+        this->debug_saver->add(full_size_save + full_save + timestamp_save);
+    };
+
+    // Save buffers 0, 1
+    save_full_size_nrl(0);
+    save_full_size_nrl(1);
 }
 
 void HafxControl::update_settings(const DetectorMessages::HafxSettings& new_settings) {

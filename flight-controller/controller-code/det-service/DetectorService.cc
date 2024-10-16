@@ -63,6 +63,7 @@ void DetectorService::evt_loop_step() {
                 if (taking_nrl_data()) {
                     push_message(dm::StopNrlList{});
                     push_message(dm::StartNrlList{.started = false});
+                    push_message(dm::Start_Debug_NrlList{.started = false});
                 }
             }
         }
@@ -160,6 +161,7 @@ void DetectorService::handle_command(dm::Shutdown) {
     hafx_debug_hist_timer = nullptr;
     hafx_debug_list_timer = nullptr;
     x123_debug_hist_timer = nullptr;
+    hafx_nrl_list_timer = nullptr;
 
     x123_ctrl = nullptr;
     hafx_ctrl.clear();
@@ -474,6 +476,17 @@ void DetectorService::check_save_nrl_buffers() {
     }
 }
 
+void DetectorService::check_save_nrl_full_size_buffers() {
+    for (const auto& [_, ctrl] : hafx_ctrl) {
+        try {
+            ctrl->poll_save_full_size_nrl_list();
+        }
+        catch (std::runtime_error const& e) {
+            throw ReconnectDetectors{"hafx issue: " + std::string{e.what()}};
+        }
+    }
+}
+
 void DetectorService::start_nrl_list_mode() {
     await_pps_edge();
     // wait for pps before starting because its pretty cool to do that B)
@@ -504,6 +517,26 @@ void DetectorService::handle_command(dm::StartNrlList cmd) {
     }
 
     check_save_nrl_buffers();
+    finish(cmd);
+}
+
+void DetectorService::handle_command(dm::Start_Debug_NrlList cmd) {
+    // copied format from Time slice stuff above
+    auto finish = [this](auto cmd) {
+        constexpr auto CHECK_BUFFER_FULL_DELAY = 250ms;
+        hafx_nrl_list_timer = TimerLifetime::create(
+            queue.push_delay(cmd, CHECK_BUFFER_FULL_DELAY)
+        );
+    };
+
+    if (not cmd.started) {
+        start_nrl_list_mode();
+        cmd.started = true;
+        finish(cmd);
+        return;
+    }
+
+    check_save_nrl_full_size_buffers();
     finish(cmd);
 }
 

@@ -135,6 +135,10 @@ Listener::receive_decode_msg() {
         return DetectorMessages::StartNrlList {};
     }
 
+    else if (cmd_name == "start-nrl-FULL-SIZE-list") {
+        return DetectorMessages::Start_Debug_NrlList {};
+    }
+
     else if (cmd_name == "stop-nrl-list") {
         return DetectorMessages::StopNrlList {};
     }
