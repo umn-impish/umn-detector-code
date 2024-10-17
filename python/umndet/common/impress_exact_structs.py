@@ -250,7 +250,7 @@ class HafxDebug:
         }
 
 class FullSizeNrlDataPoint(ctypes.LittleEndianStructure):
-    NS_PER_TICK = 200
+    NS_PER_TICK = 25
     _pack_ = 1
     _fields_ = (
         ('psd', ctypes.c_uint16),
@@ -261,7 +261,7 @@ class FullSizeNrlDataPoint(ctypes.LittleEndianStructure):
         ('over_flow', ctypes.c_uint32, 1),
         ('out_of_range', ctypes.c_uint32, 1),
         ('was_pps', ctypes.c_uint32, 1),
-        ('useless_padding', ctypes.c_uint32, 8),
+        ('padding', ctypes.c_uint32, 8),
     )
 
     def to_json(self):

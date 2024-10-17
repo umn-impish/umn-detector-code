@@ -307,10 +307,13 @@ def jsonify_exact_buffer(buffer: dict[str, object], nrl_size: int) -> dict[str, 
         # Remove the relative time key; we will replace it
         del evt['relative_timestamp']
         if nrl_size != 0:
-            del evt['useless_padding']
+            del evt['padding']
 
         # Datetime can't format nanoseconds natively, so add it manually after
-        ns_delta = (rel_time - last_pps_rel_time) * ies.StrippedNrlDataPoint.NS_PER_TICK
+        if nrl_size != 0:
+            ns_delta = (rel_time - last_pps_rel_time) * ies.FullSizeNrlDataPoint.NS_PER_TICK
+        else:
+            ns_delta = (rel_time - last_pps_rel_time) * ies.StrippedNrlDataPoint.NS_PER_TICK
         delta = datetime.timedelta(microseconds=int(ns_delta / 1e3))
 
         abs_time = (anchor + delta).strftime('%Y-%j-%H-%M-%S')
