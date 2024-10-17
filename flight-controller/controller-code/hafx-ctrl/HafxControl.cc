@@ -206,7 +206,7 @@ void HafxControl::poll_save_nrl_list() {
         // - data
         // - timestamp immediately after readout
         // save all at once so we don't get misaligned files
-        this->debug_saver->add(size_save + evts_save + timestamp_save);
+        this->nrl_data_saver->add(size_save + evts_save + timestamp_save);
     };
 
     // Save buffers 0, 1
