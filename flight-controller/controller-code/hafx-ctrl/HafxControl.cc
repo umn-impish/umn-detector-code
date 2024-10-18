@@ -16,7 +16,8 @@ HafxControl::HafxControl(std::shared_ptr<SipmUsb::UsbManager> driver_, DetectorP
                   DetectorMessages::HafxNominalSpectrumStatus> >(
                   ports.science, SLICES_PER_SECOND)},
     nrl_data_saver{std::make_unique<DataSaver>(ports.science)}, // will need different udp capture flags than time slice nominal
-    debug_saver{std::make_unique<DataSaver>(ports.debug)}
+    debug_saver{std::make_unique<DataSaver>(ports.debug)},
+    save_full_size{false}
 { }
 
 DetectorMessages::HafxHealth HafxControl::generate_health() {
@@ -155,6 +156,10 @@ HafxControl::read_nrl_buffer() {
     return nrl_buff.decode();
 }
 
+void HafxControl::use_full_size(bool full_size) {
+    this->save_full_size = full_size;
+}
+
 void HafxControl::poll_save_nrl_list() {
     /*
      * Check if NRL list buffers 0 and 1 are full,
@@ -167,11 +172,13 @@ void HafxControl::poll_save_nrl_list() {
     driver->read(fpga_res_con, MemoryType::ram);
     uint32_t time_after_read = time(NULL);
 
+    // Capture variables by reference into the lambda
     auto save = [&](auto buf_num) {
         auto full = fpga_res_con.nrl_buffer_full(buf_num);
-        if (!full) return;
+        if (!full)
+            return;
         log_debug(std::to_string(buf_num) + " is full");
-#if 1
+
         this->swap_nrl_buffer(buf_num);
         auto data = this->read_nrl_buffer();
         // If there is no PPS in the data,
@@ -184,16 +191,26 @@ void HafxControl::poll_save_nrl_list() {
             log_info("there was no PPS");
             return;
         }
-#endif
-        auto stripped = strip_nrl_data(std::move(data));
-        auto evts_save = std::string{
-            reinterpret_cast<const char*>(stripped.data()),
-            stripped.size() * sizeof(decltype(stripped)::value_type)
-        };
+
+        std::string evts_save;
+        auto num_events = data.size();
+        if (save_full_size) {
+            evts_save = std::string{
+                reinterpret_cast<const char*>(data.data()),
+                data.size() * sizeof(decltype(data)::value_type)
+            };
+        } else {
+            auto stripped = strip_nrl_data(std::move(data));
+            evts_save = std::string{
+                reinterpret_cast<const char*>(stripped.data()),
+                stripped.size() * sizeof(decltype(stripped)::value_type)
+            };
+        }
+
         // Put some metadata into strings to save
         // Never gonna be more than 2048 events;
         // could be fewer but unlikely
-        uint16_t len = static_cast<uint16_t>(stripped.size());
+        uint16_t len = static_cast<uint16_t>(num_events);
         auto size_save = std::string{
             reinterpret_cast<const char*>(&len),
             sizeof(len)};
@@ -201,71 +218,20 @@ void HafxControl::poll_save_nrl_list() {
             reinterpret_cast<const char*>(&time_after_read),
             sizeof(time_after_read)};
 
+        // The data saver we want to use depends on
+        // if we are taking "full-size" data vs not
+        auto &saver = (save_full_size? this->debug_saver : this->nrl_data_saver);
         // Save order:
         // - # of events recorded
         // - data
         // - timestamp immediately after readout
         // save all at once so we don't get misaligned files
-        this->nrl_data_saver->add(size_save + evts_save + timestamp_save);
+        saver->add(size_save + evts_save + timestamp_save);
     };
 
     // Save buffers 0, 1
     save(0);
     save(1);
-}
-
-void HafxControl::poll_save_full_size_nrl_list() {
-    using namespace SipmUsb;
-
-    FpgaResults fpga_res_con;
-    driver->read(fpga_res_con, MemoryType::ram);
-    uint32_t time_after_read = time(NULL);
-
-    auto save_full_size_nrl = [&](auto buf_num) {
-        auto full = fpga_res_con.nrl_buffer_full(buf_num);
-        if (!full) return;
-        log_debug(std::to_string(buf_num) + " is full");
-#if 1
-        this->swap_nrl_buffer(buf_num);
-        auto data = this->read_nrl_buffer();
-        // If there is no PPS in the data,
-        // we can't use it. So, discard it.
-        bool has_pps = false; 
-        for (const auto& d : data) {
-            has_pps = has_pps || d.was_pps;
-        }
-        if (!has_pps) {
-            log_info("there was no PPS");
-            return;
-        }
-#endif
-        auto full_save = std::string{
-            reinterpret_cast<const char*>(data.data()), 
-            data.size() * sizeof(decltype(data)::value_type)
-        };
-
-        // Put some metadata into strings to save
-        uint16_t full_len = static_cast<uint16_t>(data.size());
-        auto full_size_save = std::string{
-            reinterpret_cast<const char*>(&full_len),
-            sizeof(full_len)
-        };
-        auto timestamp_save = std::string{
-            reinterpret_cast<const char*>(&time_after_read),
-            sizeof(time_after_read)
-        };
-
-        // Save order:
-        // - # of events recorded
-        // - data
-        // - timestamp immediately after readout
-        // save all at once so we don't get misaligned files
-        this->debug_saver->add(full_size_save + full_save + timestamp_save);
-    };
-
-    // Save buffers 0, 1
-    save_full_size_nrl(0);
-    save_full_size_nrl(1);
 }
 
 void HafxControl::update_settings(const DetectorMessages::HafxSettings& new_settings) {

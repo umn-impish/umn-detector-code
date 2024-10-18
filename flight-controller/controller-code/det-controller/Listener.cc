@@ -132,11 +132,15 @@ Listener::receive_decode_msg() {
     }
 
     else if (cmd_name == "start-nrl-list") {
-        return DetectorMessages::StartNrlList {};
+        return DetectorMessages::StartNrlList {
+            .started = false, .full_size = false
+        };
     }
 
-    else if (cmd_name == "start-nrl-FULL-SIZE-list") {
-        return DetectorMessages::Start_Debug_NrlList {};
+    else if (cmd_name == "start-nrl-full-size-list") {
+        return DetectorMessages::StartNrlList {
+            .started = false, .full_size = true
+        };
     }
 
     else if (cmd_name == "stop-nrl-list") {
