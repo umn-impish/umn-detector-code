@@ -76,9 +76,25 @@ def read_x123_debug(fn: str, open_func: Callable) -> list[ies.X123Debug]:
 def read_hafx_debug(fn: str, open_func: Callable) -> list[ies.HafxDebug]:
     def read_elt(f: IO[bytes]):
         type_, = struct.unpack('<B', f.read(1))
-        sz = struct.calcsize(ies.HafxDebug.TYPE_DECODE_MAP[type_][1])
+        name, packing = ies.HafxDebug.TYPE_DECODE_MAP[type_]
+        try:
+            sz = struct.calcsize(packing)
+        except TypeError:
+            # we got a type which needs to be handled separately
+            if name == 'nrl_list_full_size':
+                num_evts, = struct.unpack('<H', f.read(2))
+                # seek backwards to put num_events back
+                # in the byte stream
+                # whence=1 means "from current position"
+                f.seek(-2, whence=1)
+                # num evts is 2B
+                # each event is 12B
+                # and then we put the timestamp, another 4B
+                sz = 2 + (num_evts * 12) + 4
+
         bytes_ = f.read(sz)
         return ies.HafxDebug(type_, bytes_)
+
     return generic_read_binary(fn, open_func, read_elt)
 
 
@@ -105,24 +121,6 @@ def read_stripped_nrl_list(fn: str, open_func: Callable) -> list:
         return {'unix_time': timestamp, 'events': evts}
     return generic_read_binary(fn, open_func, read_element)
 
-def read_full_nrl_list(fn: str, open_func: Callable) -> list:
-    '''
-    Read a file full of full file of full fill nrl data mode list
-    orignal format :)
-    Contains all the data as defined by:
-    https://drive.google.com/file/d/13mLWfhBhoJyiL4Ph0IBVupMZWh-V8y1D/view
-    '''
-    def read_element(f: IO[bytes]):
-        num_events, = struct.unpack('<H', f.read(2))
-        evts = []
-        for _ in range(num_events):
-            d = ies.FullSizeNrlDataPoint()
-            f.readinto(d)
-            evts.append(d)
-        timestamp, = struct.unpack('<L', f.read(4))
-        return {'unix_time': timestamp, 'events': evts}
-    return generic_read_binary(fn, open_func, read_element)
-    
 
 def reverse_bridgeport_mapping(adc_mapping: Iterable[int]) -> list[int]:
     '''

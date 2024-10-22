@@ -151,9 +151,9 @@ std::vector<SipmUsb::NrlListDataPoint>
 HafxControl::read_nrl_buffer() {
     using namespace SipmUsb;
 
-    FpgaLmNrl1 nrl_buff;
-    driver->read(nrl_buff, MemoryType::ram);
-    return nrl_buff.decode();
+    FpgaLmNrl1 nrl_buf;
+    driver->read(nrl_buf, MemoryType::ram);
+    return nrl_buf.decode();
 }
 
 void HafxControl::use_full_size(bool full_size) {
@@ -221,12 +221,24 @@ void HafxControl::poll_save_nrl_list() {
         // The data saver we want to use depends on
         // if we are taking "full-size" data vs not
         auto &saver = (save_full_size? this->debug_saver : this->nrl_data_saver);
+
+        // If we are saving to the "debug" data path,
+        // we need to include the data identifier in the stream
+        const auto debug_tag =
+            static_cast<char>(DetectorMessages::HafxDebug::Type::FullSizeNrlListMode);
+        auto prefix = (
+            save_full_size?
+            std::string{&debug_tag, 1} :
+            std::string{""}
+        );
+
         // Save order:
-        // - # of events recorded
-        // - data
-        // - timestamp immediately after readout
+        // [- (1B) if full size: the full-size data tag for debug saver]
+        //  - (2B) # of events recorded
+        //  - (N x M)B data; N is num events, M is event size
+        //  - (4B) timestamp immediately after readout
         // save all at once so we don't get misaligned files
-        saver->add(size_save + evts_save + timestamp_save);
+        saver->add(prefix + size_save + evts_save + timestamp_save);
     };
 
     // Save buffers 0, 1

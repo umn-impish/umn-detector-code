@@ -48,6 +48,7 @@ namespace DetectorMessages {
             FpgaWeights,
             Histogram,
             ListMode,
+            FullSizeNrlListMode,
         };
         Type type;
         uint32_t wait_between;
