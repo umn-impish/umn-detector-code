@@ -30,10 +30,10 @@ for port in "${!nom_ports_names[@]}"; do
         -p "$post_process_cmd" &
 done
 
-dbg_ports_names=( [$HAFX_C1_DBG_PORT]='hafx-debug-c1' \
-    [$HAFX_M1_DBG_PORT]='hafx-debug-m1' \
-    [$HAFX_M5_DBG_PORT]='hafx-debug-m5' \
-    [$HAFX_X1_DBG_PORT]='hafx-debug-x1')
+dbg_ports_names=( [$HAFX_C1_DBG_PORT]='hafx-nrl-debug-c1' \
+    [$HAFX_M1_DBG_PORT]='hafx-nrl-debug-m1' \
+    [$HAFX_M5_DBG_PORT]='hafx-nrl-debug-m5' \
+    [$HAFX_X1_DBG_PORT]='hafx-nrl-debug-x1')
 for port in "${!dbg_ports_names[@]}"; do
     # -t argument: Only wait 1s after a read to save the file
     udp_capture -m 60000 \
@@ -45,4 +45,4 @@ for port in "${!dbg_ports_names[@]}"; do
 done
 
 # Health listener
-udp_capture -m 60000 -T "$default_timeout" -t "$default_timeout" -l "$DET_HEALTH_PORT" -b "live/detector-health" -p "$post_process_cmd" &
+udp_capture -m 60000 -T "$default_timeout" -t "$default_timeout" -l "$DET_HEALTH_PORT" -f 10.133.225.126:61010 -b "live/detector-health" -p "$post_process_cmd" &

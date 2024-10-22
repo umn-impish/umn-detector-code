@@ -56,14 +56,6 @@ void DetectorService::evt_loop_step() {
                 // TODO add flag that we had a communication issue in health packet
                 log_error("Reconnecting detectors: " + std::string{e.what()});
                 reconnect_detectors();
-                if (taking_nominal_data()) {
-                    push_message(dm::StopNominal{});
-                    push_message(dm::CollectNominal{.started = false});
-                }
-                if (taking_nrl_data()) {
-                    push_message(dm::StopNrlList{});
-                    push_message(dm::StartNrlList{.started = false});
-                }
             }
         }
         catch (const std::exception& e) {
@@ -160,6 +152,7 @@ void DetectorService::handle_command(dm::Shutdown) {
     hafx_debug_hist_timer = nullptr;
     hafx_debug_list_timer = nullptr;
     x123_debug_hist_timer = nullptr;
+    hafx_nrl_list_timer = nullptr;
 
     x123_ctrl = nullptr;
     hafx_ctrl.clear();
@@ -474,10 +467,14 @@ void DetectorService::check_save_nrl_buffers() {
     }
 }
 
-void DetectorService::start_nrl_list_mode() {
+void DetectorService::start_nrl_list_mode(bool full_size) {
     await_pps_edge();
     // wait for pps before starting because its pretty cool to do that B)
     for (auto& [_, ctrl] : hafx_ctrl) {
+        // Indicate if we take "full-size" or "normal"
+        // NRL data
+        ctrl->use_full_size(full_size);
+
         // clear both NRL buffers
         ctrl->swap_nrl_buffer(0);
         ctrl->restart_list_mode();
@@ -497,7 +494,9 @@ void DetectorService::handle_command(dm::StartNrlList cmd) {
     };
 
     if (not cmd.started) {
-        start_nrl_list_mode();
+        // Start the NRL data collection in "full-size"
+        // or "not full size" saving mode
+        start_nrl_list_mode(cmd.full_size);
         cmd.started = true;
         finish(cmd);
         return;
