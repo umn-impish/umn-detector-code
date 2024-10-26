@@ -76,9 +76,25 @@ def read_x123_debug(fn: str, open_func: Callable) -> list[ies.X123Debug]:
 def read_hafx_debug(fn: str, open_func: Callable) -> list[ies.HafxDebug]:
     def read_elt(f: IO[bytes]):
         type_, = struct.unpack('<B', f.read(1))
-        sz = struct.calcsize(ies.HafxDebug.TYPE_DECODE_MAP[type_][1])
+        name, packing = ies.HafxDebug.TYPE_DECODE_MAP[type_]
+        try:
+            sz = struct.calcsize(packing)
+        except TypeError:
+            # we got a type which needs to be handled separately
+            if name == 'nrl_list_full_size':
+                num_evts, = struct.unpack('<H', f.read(2))
+                # seek backwards to put num_events back
+                # in the byte stream
+                # whence=1 means "from current position"
+                f.seek(-2, whence=1)
+                # num evts is 2B
+                # each event is 12B
+                # and then we put the timestamp, another 4B
+                sz = 2 + (num_evts * 12) + 4
+
         bytes_ = f.read(sz)
         return ies.HafxDebug(type_, bytes_)
+
     return generic_read_binary(fn, open_func, read_elt)
 
 

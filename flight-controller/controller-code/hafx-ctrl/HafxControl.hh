@@ -6,6 +6,7 @@
 #include <DetectorMessages.hh>
 
 #include <DetectorSupport.hh>
+#include <functional>
 #include <typeindex>
 #include <unordered_map>
 
@@ -29,6 +30,7 @@ public:
     void restart_trace();
     bool check_trace_done();
     void swap_nrl_buffer(uint8_t buf_num);
+    void use_full_size(bool full_size);
     void poll_save_nrl_list();
     void poll_save_time_slice();
 
@@ -53,6 +55,9 @@ private:
     std::unique_ptr<QueuedDataSaver<science_t> > science_saver;
     std::unique_ptr<DataSaver> nrl_data_saver;
     std::unique_ptr<DataSaver> debug_saver;
+
+    // Do we want to save full-size NRL data?
+    bool save_full_size;
 
     DetectorMessages::HafxNominalSpectrumStatus
     read_time_slice();

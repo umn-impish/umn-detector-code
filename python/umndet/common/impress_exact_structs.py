@@ -1,4 +1,5 @@
 import base64
+from io import BytesIO
 import ctypes
 import struct
 
@@ -234,6 +235,9 @@ class HafxDebug:
         ('fpga_weights', '<1024H'),
         ('histogram', '<4096L'),
         ('listmode', '<1024H'),
+        # The NRL list mode data is variable-size,
+        # so we need to handle it as a special case
+        ('nrl_list_full_size', NotImplemented),
     ]
 
     def __init__(self, debug_type: int, debug_bytes: bytes):
@@ -242,15 +246,50 @@ class HafxDebug:
 
     def decode(self) -> dict[str, object]:
         type_, unpack_str = HafxDebug.TYPE_DECODE_MAP[self.type]
-        return {
-            'type': type_,
-            'registers': list(
-                struct.unpack(unpack_str, self.bytes)
-            )
-        }
+        if type_ != 'nrl_list_full_size':
+            return {
+                'type': type_,
+                'registers': list(
+                    struct.unpack(unpack_str, self.bytes)
+                )
+            }
 
+        # change if we add more weird types
+        assert type_ == 'nrl_list_full_size'
+        # NRL full size list
+        f = BytesIO(self.bytes)
+        num_events, = struct.unpack('<H', f.read(2))
+        evts = []
+        for _ in range(num_events):
+            d = FullSizeNrlDataPoint()
+            f.readinto(d)
+            evts.append(d)
+        timestamp, = struct.unpack('<L', f.read(4))
+        return {'type': type_,
+                'data': {'unix_time': timestamp, 'events': evts}}
+
+
+class FullSizeNrlDataPoint(ctypes.LittleEndianStructure):
+    NS_PER_TICK = 25
+    _pack_ = 1
+    _fields_ = (
+        ('psd', ctypes.c_uint16),
+        ('energy', ctypes.c_uint16),
+        # Up to about 2 years of timestamps
+        ('relative_timestamp', ctypes.c_uint64, 51),
+        ('external_trigger', ctypes.c_uint64, 1),
+        ('piled_up', ctypes.c_uint64, 1),
+        ('over_flow', ctypes.c_uint64, 1),
+        ('out_of_range', ctypes.c_uint64, 1),
+        ('was_pps', ctypes.c_uint64, 1),
+        ('padding', ctypes.c_uint64, 8),
+    )
+
+    def to_json(self):
+        return {field[0]: getattr(self, field[0]) for field in self._fields_}
 
 class StrippedNrlDataPoint(ctypes.LittleEndianStructure):
+    NS_PER_TICK = 200
     _pack_ = 1
     _fields_ = (
         ('relative_timestamp', ctypes.c_uint32, 25),
@@ -259,4 +298,7 @@ class StrippedNrlDataPoint(ctypes.LittleEndianStructure):
         ('piled_up', ctypes.c_uint32, 1),
         ('out_of_range', ctypes.c_uint32, 1),
     )
+
+    def to_json(self):
+        return {field[0]: getattr(self, field[0]) for field in self._fields_}
 

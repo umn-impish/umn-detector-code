@@ -118,7 +118,7 @@ private:
     void initialize();
     void start_nominal();
     void read_all_time_slices();
-    void start_nrl_list_mode();
+    void start_nrl_list_mode(bool full_size);
     void check_save_nrl_buffers();
     void reconnect_detectors();
     void x123_debug(DetectorMessages::X123Debug);

@@ -48,6 +48,7 @@ namespace DetectorMessages {
             FpgaWeights,
             Histogram,
             ListMode,
+            FullSizeNrlListMode,
         };
         Type type;
         uint32_t wait_between;
@@ -97,7 +98,10 @@ namespace DetectorMessages {
     struct RestartTimeSliceCollection { };
     struct ImmediateHafxTimeSliceRead { };
 
-    struct StartNrlList { bool started = false; };
+    struct StartNrlList {
+        bool started = false;
+        bool full_size = false;
+    };
     struct StopNrlList { };
 
     struct __attribute__((packed)) HafxHealth {
