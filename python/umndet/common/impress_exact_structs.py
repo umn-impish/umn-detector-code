@@ -275,8 +275,9 @@ class FullSizeNrlDataPoint(ctypes.LittleEndianStructure):
     _fields_ = (
         ('psd', ctypes.c_uint16),
         ('energy', ctypes.c_uint16),
-        ('relative_timestamp', ctypes.c_uint64, 51), # this is literally 14.3 years of range with
-        ('external_trigger', ctypes.c_uint64, 1), # 200ns ticks, what the flip, who's idea was that
+        # Up to about 2 years of timestamps
+        ('relative_timestamp', ctypes.c_uint64, 51),
+        ('external_trigger', ctypes.c_uint64, 1),
         ('piled_up', ctypes.c_uint64, 1),
         ('over_flow', ctypes.c_uint64, 1),
         ('out_of_range', ctypes.c_uint64, 1),
@@ -300,3 +301,4 @@ class StrippedNrlDataPoint(ctypes.LittleEndianStructure):
 
     def to_json(self):
         return {field[0]: getattr(self, field[0]) for field in self._fields_}
+
