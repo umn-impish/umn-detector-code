@@ -216,10 +216,8 @@ dm::HealthPacket DetectorService::generate_health() {
     if (hafx_ctrl.contains(dm::HafxChannel::X1))
         health_pack.x1 = hafx_ctrl[dm::HafxChannel::X1]->generate_health();
 
-    try {
+    if (x123_ctrl->driver_valid()) {
         health_pack.x123 = x123_ctrl->generate_health();
-    } catch (const DetectorException& e) {
-        log_debug(e.what());
     }
 
     return health_pack;
