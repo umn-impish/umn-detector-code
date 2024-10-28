@@ -21,6 +21,9 @@ int main(int argc, char* argv[]) {
     // environment variables
     auto service = setup_service(sock_fd);
 
+    // Turn on automatic health data generation once we start up
+    service = auto_health(std::move(service));
+
     // Give the listen socket and the service (logic) to the listener
     auto listen = std::make_unique<Listener>(sock_fd, std::move(service));
     listen->listen_loop();
@@ -86,4 +89,29 @@ setup_service(int sock_fd) {
 void usage(const char* prog) {
     std::cerr << "Usage: run" << prog << "with no arguments.\n"
               << "Expects environment variables to be defined as in main().\n";
+}
+
+std::unique_ptr<DetectorService> auto_health(std::unique_ptr<DetectorService> service) {
+    /* Get the UDP port which expects health data
+       and instruct the DetectorService object to start blasting it with
+       health data every ten seconds.
+
+       If the detector is told to "sleep" this health output
+       will need to be manually restarted, along with any other
+       aspects of the data collection.
+    */
+    sockaddr_in udp_health_addr;
+    std::memset(&udp_health_addr, 0, sizeof(sockaddr_in));
+    auto port = port_env("DET_HEALTH_PORT");
+    udp_health_addr.sin_family = AF_INET;
+    udp_health_addr.sin_port = htons(port);
+    inet_aton("127.0.0.1", &udp_health_addr.sin_addr);
+
+    service->push_message(DetectorMessages::Initialize{});
+    service->push_message(DetectorMessages::StartPeriodicHealth{
+        .seconds_between = 10,
+        .fwd = {udp_health_addr}
+    });
+    
+    return service;
 }
