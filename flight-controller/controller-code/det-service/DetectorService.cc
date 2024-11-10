@@ -357,7 +357,7 @@ void DetectorService::handle_command(dm::QueryX123DebugHistogram) {
 }
 
 void DetectorService::await_pps_edge() {
-    static const uint8_t PPS_DETECT_PIN = 23;
+    static const uint8_t PPS_DETECT_PIN = 31;
     RaiiGpioPin p{PPS_DETECT_PIN, RaiiGpioPin::Operation::rising_edge};
     // wait 2s for PPS
     struct timespec timeout {.tv_sec = 2, .tv_nsec = 0};
