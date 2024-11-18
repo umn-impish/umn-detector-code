@@ -163,16 +163,12 @@ void DetectorService::handle_command(dm::Shutdown) {
 
 void DetectorService::send_health(
     const sockaddr_in& dest,
-    const DetectorMessages::HealthPacket& hp
+    const std::vector<std::byte>& health_bytes
 ) {
-    constexpr auto HEALTH_SZ = sizeof(DetectorMessages::HealthPacket);
-    std::string send(HEALTH_SZ, '\0');
-
-    std::memcpy(send.data(), (char*)&hp, HEALTH_SZ);
     int ret = sendto(
         socket_fd,
-        send.data(),
-        send.size(),
+        health_bytes.data(),
+        health_bytes.size(),
         0,
         (const sockaddr*)&dest,
         sizeof(sockaddr_in)
@@ -200,7 +196,7 @@ void DetectorService::handle_command(dm::StopPeriodicHealth) {
     health_timer = nullptr;
 }
 
-dm::HealthPacket DetectorService::generate_health() {
+std::vector<std::byte> DetectorService::generate_health() {
     dm::HealthPacket health_pack;
     std::memset(&health_pack, 0, sizeof(dm::HealthPacket));
 
@@ -220,7 +216,13 @@ dm::HealthPacket DetectorService::generate_health() {
         health_pack.x123 = x123_ctrl->generate_health();
     }
 
-    return health_pack;
+    std::vector<std::byte> ret(sizeof(health_pack));
+    std::memcpy(
+        ret.data(),
+        reinterpret_cast<std::byte*>(&health_pack),
+        ret.size()
+    );
+    return ret;
 }
 
 void DetectorService::handle_command(dm::HafxSettings cmd) {

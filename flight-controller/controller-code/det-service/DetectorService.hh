@@ -59,6 +59,9 @@ public:
     void put_hafx_serial_nums(
         std::unordered_map<DetectorMessages::HafxChannel, std::string>);
 
+protected:
+    virtual std::vector<std::byte> generate_health();
+
 private:
     int socket_fd;
 
@@ -107,10 +110,9 @@ private:
     void handle_command(DetectorMessages::PromiseWrap msg);
 
     // implementations & helpers for `handle_command`s
-    DetectorMessages::HealthPacket generate_health();
     void send_health(
         const sockaddr_in& dest,
-        const DetectorMessages::HealthPacket& hp
+        const std::vector<std::byte>& health_bytes
     );
 
     // helpers
