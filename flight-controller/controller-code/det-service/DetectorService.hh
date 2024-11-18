@@ -59,11 +59,12 @@ public:
     void put_hafx_serial_nums(
         std::unordered_map<DetectorMessages::HafxChannel, std::string>);
 
+    const int socket_fd;
+
 protected:
     virtual std::vector<std::byte> generate_health();
 
 private:
-    int socket_fd;
 
     bool _alive;
 
