@@ -112,7 +112,7 @@ Listener::receive_decode_msg() {
     else if (!th || !ser || !ser->alive()) {
         // Special case: "stop" command given to a sleep state
         // shouldn't throw an error because it is effectively a no-op
-        if (cmd_name.starts_with("stop-")) {
+        if (cmd_name.starts_with("stop-") || cmd_name.starts_with("sleep")) {
             return { };
         }
         std::string err_str{"Bad command given to sleeping detector: "};
