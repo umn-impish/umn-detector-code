@@ -43,7 +43,10 @@ int UsbManager::xfer_in_chunks(int endpoint, void* raw_buffer, int num_bytes, in
        10ms to be safe.
      */
     using namespace std::chrono_literals;
-    constexpr auto BRIDGEPORT_DELAY = 10ms;
+    auto bridgeport_delay = 10ms;
+    if (auto env_delay = getenv("BRIDGEPORT_USB_DELAY_MS")) {
+        bridgeport_delay = (1ms) * static_cast<uint16_t>(atoi(env_delay));
+    }
 
     // transfer the 256 byte chunks
     for (int i = 0; i < nchunks; ++i) {
@@ -57,7 +60,7 @@ int UsbManager::xfer_in_chunks(int endpoint, void* raw_buffer, int num_bytes, in
         if (ret < 0) return ret;
 
         // Sleep to let the Bridgeports populate stuff into RAM
-        std::this_thread::sleep_for(BRIDGEPORT_DELAY);
+        std::this_thread::sleep_for(bridgeport_delay);
     }
 
     transferred = 0;
@@ -73,7 +76,7 @@ int UsbManager::xfer_in_chunks(int endpoint, void* raw_buffer, int num_bytes, in
         if (ret < 0) return ret;
 
         // Sleep to let the Bridgeports populate stuff into RAM
-        std::this_thread::sleep_for(BRIDGEPORT_DELAY);
+        std::this_thread::sleep_for(bridgeport_delay);
     }
     return 0;
 }

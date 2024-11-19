@@ -6,7 +6,6 @@
 #include <IoContainer.hh>
 
 std::shared_ptr<SipmUsb::UsbManager> get_usb_manager() {
-    // std::string TEST_SERIAL{"7A65CD294A344E51202020412B244FF"};
     SipmUsb::BridgeportDeviceManager device_manager;
     // take first availabe device
     for (auto [_, man] : device_manager.device_map) {
@@ -159,6 +158,42 @@ TEST(sipm3k, FillListBufferAndRead) {
     EXPECT_GE(decoded.size(), 2045) << "Buffer contains too little events"; // this number can change. 2045 seems to be the lowest I saw over ~20 saves.
     EXPECT_LE(decoded.size(), 2047) << "Buffer (impossibly) containts too many events";
     SUCCEED();
+}
+
+TEST(sipm3k, FastReads) {
+    /* Test if we can intentionally break the SiPM-3000
+       USB code by reading data really fast
+     */
+
+    constexpr size_t NUM_ITERATIONS = 10000;
+    using namespace SipmUsb;
+
+    auto many_reads = [&]() {
+        auto man = get_usb_manager();
+        for (size_t i = 0; i < NUM_ITERATIONS; ++i) {
+            // Repeatedly read into the control register.
+            // If theory is correct this will lead to a 
+            // USB error if we read too fast---CPU on board
+            // can't keep up
+            auto fc = FpgaCtrl{};
+            man->read(fc, MemoryType::ram);
+        }
+    };
+
+    auto many_writes = [&]() {
+        // nothing yet
+    };
+
+    // First, try with zero delay
+    setenv("BRIDGEPORT_DELAY_MS", "0", 1);
+    many_reads();
+    many_writes();
+
+    // Then, try with a 10ms delay to see if
+    // an error occurs
+    setenv("BRIDGEPORT_DELAY_MS", "10", 1);
+    many_reads();
+    many_writes();
 }
 
 
