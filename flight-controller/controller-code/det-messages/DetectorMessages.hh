@@ -49,6 +49,7 @@ namespace DetectorMessages {
             Histogram,
             ListMode,
             FullSizeNrlListMode,
+	    AllChannelHistogram,
         };
         Type type;
         uint32_t wait_between;
@@ -91,6 +92,7 @@ namespace DetectorMessages {
     struct QueryLegacyHistogram { DetectorMessages::HafxChannel ch; };
     struct QueryListMode { DetectorMessages::HafxChannel ch; };
     struct QueryX123DebugHistogram { };
+    struct QueryAllChannelLegacyHistogram{ };
 
     struct ImmediateX123BufferRead { };
     struct RestartX123SequentialBuffering { };

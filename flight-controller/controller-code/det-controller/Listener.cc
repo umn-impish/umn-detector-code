@@ -282,6 +282,7 @@ DetectorMessages::DetectorCommand Listener::hafx_debug() {
     else if (type == "fpga_statistics"        ) t = dbg_t::Type::FpgaStatistics;
     else if (type == "fpga_weights"           ) t = dbg_t::Type::FpgaWeights;
     else if (type == "histogram"              ) t = dbg_t::Type::Histogram;
+    else if (type == "all_channel_histogram"  ) t = dbg_t::Type::AllChannelHistogram;
     else if (type == "list_mode"              ) t = dbg_t::Type::ListMode;
     else throw DetectorException{"Ill-formed debug request type '" + type + "'"};
 
