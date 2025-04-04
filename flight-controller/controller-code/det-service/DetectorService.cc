@@ -286,7 +286,18 @@ void DetectorService::handle_command(dm::HafxDebug cmd) {
         );
     }
     else if (acq_type == dbr_t::Type::AllChannelHistogram) {
-        ctrl->restart_time_slice_or_histogram();
+	if (hafx_ctrl.contains(dm::HafxChannel::C1)) {
+	    hafx_ctrl[dm::HafxChannel::C1]->restart_time_slice_or_histogram();
+	}
+	if (hafx_ctrl.contains(dm::HafxChannel::M1)) {
+	    hafx_ctrl[dm::HafxChannel::M1]->restart_time_slice_or_histogram();
+	}
+	if (hafx_ctrl.contains(dm::HafxChannel::M5)) {
+	    hafx_ctrl[dm::HafxChannel::M5]->restart_time_slice_or_histogram();
+	}
+	if (hafx_ctrl.contains(dm::HafxChannel::X1)) {
+	    hafx_ctrl[dm::HafxChannel::X1]->restart_time_slice_or_histogram();
+	}
         hafx_debug_hist_timer = TimerLifetime::create(
             queue.push_delay(dm::QueryAllChannelLegacyHistogram{}, delay)
         );
@@ -361,15 +372,21 @@ void DetectorService::handle_command(dm::QueryLegacyHistogram cmd) {
 }
 
 void DetectorService::handle_command(dm::QueryAllChannelLegacyHistogram) {
+
     using hg_t = SipmUsb::FpgaHistogram;
-    if (hafx_ctrl.contains(dm::HafxChannel::C1))
-        hafx_ctrl[dm::HafxChannel::C1]->read_save_debug<hg_t>();
-    if (hafx_ctrl.contains(dm::HafxChannel::M1))
+
+    if (hafx_ctrl.contains(dm::HafxChannel::C1)) {
+    	hafx_ctrl[dm::HafxChannel::C1]->read_save_debug<hg_t>();
+    }
+    if (hafx_ctrl.contains(dm::HafxChannel::M1)) {
 	hafx_ctrl[dm::HafxChannel::M1]->read_save_debug<hg_t>();
-    if (hafx_ctrl.contains(dm::HafxChannel::M5))
+    }
+    if (hafx_ctrl.contains(dm::HafxChannel::M5)) {
 	hafx_ctrl[dm::HafxChannel::M5]->read_save_debug<hg_t>();
-    if (hafx_ctrl.contains(dm::HafxChannel::X1))
+    }
+    if (hafx_ctrl.contains(dm::HafxChannel::X1)) {
 	hafx_ctrl[dm::HafxChannel::X1]->read_save_debug<hg_t>();
+    }
 }
 
 void DetectorService::handle_command(dm::QueryX123DebugHistogram) {

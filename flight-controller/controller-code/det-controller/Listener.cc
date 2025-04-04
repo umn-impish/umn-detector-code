@@ -264,7 +264,8 @@ DetectorMessages::DetectorCommand Listener::hafx_debug() {
 
     bool do_wait = (
         type == "histogram" || type == "list_mode" ||
-        type == "nrl_list_mode" || type == "time_slice"
+        type == "nrl_list_mode" || type == "time_slice" ||
+	type == "all_channel_histogram"
     );
     if (do_wait && (wait == 0 || wait > MAX_WAIT_TIME_SEC)) {
         log_debug("maybe waiting for " + std::to_string(wait));
