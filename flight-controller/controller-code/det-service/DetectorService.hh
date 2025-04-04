@@ -29,6 +29,7 @@ public:
         DetectorMessages::QueryListMode,
         DetectorMessages::QueryTraceAcquisition,
         DetectorMessages::QueryLegacyHistogram,
+	DetectorMessages::QueryAllChannelLegacyHistogram,
         DetectorMessages::QueryX123DebugHistogram,
 
         DetectorMessages::StartPeriodicHealth,
@@ -100,6 +101,7 @@ private:
     void handle_command(DetectorMessages::X123Debug cmd);
     void handle_command(DetectorMessages::QueryTraceAcquisition cmd);
     void handle_command(DetectorMessages::QueryLegacyHistogram cmd);
+    void handle_command(DetectorMessages::QueryAllChannelLegacyHistogram cmd);
     void handle_command(DetectorMessages::QueryListMode cmd);
     void handle_command(DetectorMessages::QueryX123DebugHistogram cmd);
     void handle_command(DetectorMessages::StopNominal cmd);

@@ -264,7 +264,8 @@ DetectorMessages::DetectorCommand Listener::hafx_debug() {
 
     bool do_wait = (
         type == "histogram" || type == "list_mode" ||
-        type == "nrl_list_mode" || type == "time_slice"
+        type == "nrl_list_mode" || type == "time_slice" ||
+	type == "all_channel_histogram"
     );
     if (do_wait && (wait == 0 || wait > MAX_WAIT_TIME_SEC)) {
         log_debug("maybe waiting for " + std::to_string(wait));
@@ -282,6 +283,7 @@ DetectorMessages::DetectorCommand Listener::hafx_debug() {
     else if (type == "fpga_statistics"        ) t = dbg_t::Type::FpgaStatistics;
     else if (type == "fpga_weights"           ) t = dbg_t::Type::FpgaWeights;
     else if (type == "histogram"              ) t = dbg_t::Type::Histogram;
+    else if (type == "all_channel_histogram"  ) t = dbg_t::Type::AllChannelHistogram;
     else if (type == "list_mode"              ) t = dbg_t::Type::ListMode;
     else throw DetectorException{"Ill-formed debug request type '" + type + "'"};
 
