@@ -1,5 +1,7 @@
+#include <chrono>
 #include <iostream>
 #include <sstream>
+#include <thread>
 
 #include "IoContainer.hh"
 #include "logging.hh"
@@ -34,15 +36,31 @@ int UsbManager::xfer_in_chunks(int endpoint, void* raw_buffer, int num_bytes, in
     int ret = 0;
     int transferred = 0;
 
+    /* The ARM processor sometimes needs a little bit
+       of a wait before it will fill in the RAM slots
+       for data to transfer.
+       Bridgeport uses between 1 to 10ms, so let's just use
+       10ms to be safe.
+     */
+    using namespace std::chrono_literals;
+    auto bridgeport_delay = 10ms;
+    if (auto env_delay = getenv("BRIDGEPORT_USB_DELAY_MS")) {
+        bridgeport_delay = (1ms) * static_cast<uint16_t>(atoi(env_delay));
+    }
+
     // transfer the 256 byte chunks
     for (int i = 0; i < nchunks; ++i) {
         ret = libusb_bulk_transfer(han, endpoint, buffer + i*CHUNK_SZ, CHUNK_SZ, &transferred, timeout);
         if (transferred != CHUNK_SZ) {
             std::stringstream ss;
-            ss << "didn't read/write appropriate chunk size: " << transferred << " vs " << CHUNK_SZ << ". " << libusb_strerror(ret);
+            auto direction = (endpoint & 0x80)? "read" : "write";
+            ss << "didn't " << direction << " appropriate chunk size: " << transferred << " vs " << CHUNK_SZ << ". " << libusb_strerror(ret);
             log_error(ss.str());
         }
         if (ret < 0) return ret;
+
+        // Sleep to let the Bridgeports populate stuff into RAM
+        std::this_thread::sleep_for(bridgeport_delay);
     }
 
     transferred = 0;
@@ -51,10 +69,14 @@ int UsbManager::xfer_in_chunks(int endpoint, void* raw_buffer, int num_bytes, in
         ret = libusb_bulk_transfer(han, endpoint, buffer + nchunks*CHUNK_SZ, leftover, &transferred, timeout);
         if (transferred != leftover) {
             std::stringstream ss;
-            ss << "didn't read/write appropriate leftover: " << transferred << " vs " << leftover << ". " << libusb_strerror(ret);
+            auto direction = (endpoint & 0x80)? "read" : "write";
+            ss << "didn't " << direction << " appropriate leftover: " << transferred << " vs " << CHUNK_SZ << ". " << libusb_strerror(ret);
             log_error(ss.str());
         }
         if (ret < 0) return ret;
+
+        // Sleep to let the Bridgeports populate stuff into RAM
+        std::this_thread::sleep_for(bridgeport_delay);
     }
     return 0;
 }
