@@ -1,6 +1,7 @@
 /*
  * Collect a spectrum from a selected SiPM-3k detector, and output it in a nice format
 */
+#include <sys/ioctl.h>
 #include <array>
 #include <cstdlib>
 #include <iostream>
@@ -43,14 +44,15 @@ int main(int argc, char *argv[]) {
             return 1;
         }
         auto all_devs = SipmUsb::BridgeportDeviceManager{};
-        std::cout << "available serials: " << std::endl;
         try {
+            usb_man = all_devs.device_map.at(serial_number);
+        } catch (std::out_of_range const&) {
+            std::cerr
+            << "Serial requested is not connected." << std::endl
+            << "available serials: " << std::endl;
             for (auto [k, _] : all_devs.device_map) {
                 std::cout << k << std::endl;
             }
-            usb_man = all_devs.device_map.at(serial_number);
-        } catch (std::out_of_range const&) {
-            std::cerr << "Serial requested is not connected." << std::endl;
             return 1;
         }
     }
@@ -80,14 +82,25 @@ int main(int argc, char *argv[]) {
     );
     hc->read_save_debug<SipmUsb::FpgaHistogram>();
 
-    constexpr size_t HISTOGRAM_SIZE = 4096;
-    std::array<uint16_t, HISTOGRAM_SIZE> buffer;
-    recv(socket_fd, buffer.data(), HISTOGRAM_SIZE * 2, 0);
+    SipmUsb::FpgaHistogram hg{};
+    // We need enough for (debug tag) + (bytes in buffer)
+    {
+        std::vector<uint8_t> buffer(sizeof(hg.registers[0]) * hg.registers.size() + 1, 0);
+        // Read the actual data into a struct
+        recv(
+            socket_fd,
+            buffer.data(),
+            buffer.size(),
+            0
+        );
+        std::memcpy(hg.registers.data(), buffer.data() + 1, buffer.size() - 1);
+    }
 
-    for (auto count : buffer) {
+    for (auto count : hg.registers) {
         std::cout << count << ' ';
     }
     std::cout << std::endl;
 
     return 0;
 }
+
