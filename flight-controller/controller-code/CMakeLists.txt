@@ -27,6 +27,8 @@ add_subdirectory(det-controller)
 
 add_subdirectory(install)
 
+add_subdirectory(utilities)
+
 # Install target
 install(
     # baseline programs required to function
