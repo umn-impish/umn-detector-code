@@ -22,14 +22,16 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Put the channel in upper case
+    // The channel needs to be in upper case because the envar is
+    // all upper case letters (by convention)
     std::string channel{argv[1]};
     std::transform(
         channel.begin(), channel.end(), channel.begin(),
         [](auto c) { return std::toupper(c); }
     );
 
-    // Get the device we want
+    // The simplest way to get the device we want is:
+    // connect to all of them, then pick out one via serial number.
     std::shared_ptr<SipmUsb::UsbManager> usb_man = nullptr;
     {
         std::string serial_number;
@@ -57,7 +59,8 @@ int main(int argc, char *argv[]) {
         }
     }
  
-    // Set up the hafx control
+    // The HafxControl sends out data via UDP sockets,
+    // so we specify some ports here for that purpose.
     Detector::DetectorPorts dp {
         .science = 12000,
         .debug = 12001
@@ -83,19 +86,20 @@ int main(int argc, char *argv[]) {
     hc->read_save_debug<SipmUsb::FpgaHistogram>();
 
     SipmUsb::FpgaHistogram hg{};
-    // We need enough for (debug tag) + (bytes in buffer)
     {
+        // We need enough for (debug tag) + (bytes in buffer)
         std::vector<uint8_t> buffer(sizeof(hg.registers[0]) * hg.registers.size() + 1, 0);
-        // Read the actual data into a struct
         recv(
             socket_fd,
             buffer.data(),
             buffer.size(),
             0
         );
+        // Cut out the debug tag from the buffer when copying into the histogram array
         std::memcpy(hg.registers.data(), buffer.data() + 1, buffer.size() - 1);
     }
 
+    // Output to stdout so we can send to a file or other places if we want
     for (auto count : hg.registers) {
         std::cout << count << ' ';
     }
