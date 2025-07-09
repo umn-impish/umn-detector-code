@@ -38,8 +38,10 @@ int main(int argc, char *argv[]) {
     auto trace = receive_hafx_debug<SipmUsb::FpgaOscilloscopeTrace>(socket_fd);
 
     // Output to stdout so we can send to a file or other places if we want
-    for (auto count : trace.registers) {
-        std::cout << count << ' ';
+    for (auto point : trace.registers) {
+        // Scale the output to (0, 1024) and convert it to mV
+        double d = double{point} / 32.0 * (1000.0 / 1024.0);
+        std::cout << d << ' ';
     }
     std::cout << std::endl;
 
