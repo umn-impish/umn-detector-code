@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    auto usb_man = usb_from_channel_sn(argv[2]);
+    auto usb_man = usb_from_channel_sn(argv[1]);
  
     // The HafxControl sends out data via UDP sockets,
     // so we specify some ports here for that purpose.
