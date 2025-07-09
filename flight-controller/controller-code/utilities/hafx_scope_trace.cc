@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
     // Output to stdout so we can send to a file or other places if we want
     for (auto point : trace.registers) {
         // Scale the output to (0, 1024) and convert it to mV
-        double d = double{point} / 32.0 * (1000.0 / 1024.0);
+        double d = static_cast<double>(point) / 32.0 * (1000.0 / 1024.0);
         std::cout << d << ' ';
     }
     std::cout << std::endl;
