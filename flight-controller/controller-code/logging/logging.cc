@@ -8,11 +8,13 @@
 static std::mutex mux;
 
 void log_info(const std::string& s) {
+    return;
     std::lock_guard<std::mutex> l(mux);
     sd_journal_print(LOG_INFO, "%s", s.c_str());
 }
 
 void log_debug(const std::string& s) {
+    return;
     std::lock_guard<std::mutex> l(mux);
     sd_journal_print(LOG_DEBUG, "%s", s.c_str());
 }
