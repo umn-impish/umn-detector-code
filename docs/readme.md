@@ -1,4 +1,4 @@
 # Documents pertaining to flight code
 - `detector-commands.md`: list of commands accepted by the detector flight code
-- `setup-guide.md`: how to set up the flight code and associated processes for "checkout"
-   (e.g. from MSU or elsewhere)
+- `impress-usage.md`: how to set up the flight code and associated processes for checkout of IMPRESS firmware
+- `exact-usage.md`: how to set up flight code, and Pi network on the SmallSat LAN/internet bridge, and acquire NRL data
