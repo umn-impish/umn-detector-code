@@ -10,23 +10,21 @@ if [[ $# != 1 ]]; then
     exit 1
 fi
 
-cuser=${SUDO_USER:-$(whoami)}
-out_path="/home/${cuser}/detector-config/umn_detector_envars.txt"
-mkdir -p "$(dirname "$out_path")"
-
+out_path="$HOME/detector-config"
+mkdir -p "$HOME/detector-config"
 
 base_path=$1
 cp "$base_path/envars.bash" $out_path || (echo "Failed to copy file envars file" && exit -1)
 
-
-source_str="source $out_path"
-brc_path="/home/${cuser}/.bashrc"
+source_str="source $out_path/envars.bash"
+brc_path="$HOME/.bashrc"
 
 if [[ !( $(cat $brc_path) =~ $source_str ) ]]; then
     echo $source_str >> $brc_path
+    echo "updated envars file"
 else
-    echo "updated port"
+    echo "no change to envars"
 fi
 
 
-source /home/${cuser}/.bashrc
+source $HOME/.bashrc
