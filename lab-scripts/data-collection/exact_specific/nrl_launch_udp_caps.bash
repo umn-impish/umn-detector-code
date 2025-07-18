@@ -43,13 +43,7 @@ for port in "${!dbg_ports_names[@]}"; do
         -p "$post_process_cmd" &
 done
 
-# Health listener
-health_fwd_port=54001
-cdh_port=51000
-mpls_addr="10.133.225.126:$health_fwd_port"
-stpaul_addr="192.168.2.50:$health_fwd_port"
-cdh_addr="127.0.0.1:51000"
-
 # 10 mins
 health_timeout=$((10 * 60))
-udp_capture -m 60000 -T "$health_timeout" -t "$health_timeout" -l "$DET_HEALTH_PORT" -f $cdh_addr -f $stpaul_addr -f $mpls_addr -b "live/detector-health" -p "$post_process_cmd" &
+udp_capture -m 60000 -T "$health_timeout" -t "$health_timeout" -l "$DET_HEALTH_PORT" -b "live/detector-health" -p "$post_process_cmd" &
+
