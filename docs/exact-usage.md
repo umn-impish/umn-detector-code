@@ -14,6 +14,7 @@ You can download the RPi imager from its website: [imager](https://www.raspberry
 - keyboard: generic, US layout
 - locale: `EN_US`
 - to pick the locale you need to use space bar, kind of weird but yeah
+
 While you're at it, make a couple more changes in raspi-config:
 - enable the SSH server
 - enable the i2c interface
