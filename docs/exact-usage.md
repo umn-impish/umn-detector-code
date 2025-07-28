@@ -148,6 +148,8 @@ cd umn-detector-code/lab-scripts/data-collection/exact_specific
 ./start_nrl_list.bash c1
 ```
 
+If you see no activity aside from the initialization info when running `view_logs`, the serial numbers might be misconfigured. Edit them in `$HOME/detector-config/envars.bash`. The available serial numbers get listed in the logs. For EM testing, there should only be one connected.
+
 If you see errors in `view_logs`, particularly a `std::out_of_range`, then
 the serial numbers configured in `envars.bash` are probably wrong and you need to
 go in and update them. Quit the programs using `quit.bash`, update the envars,
