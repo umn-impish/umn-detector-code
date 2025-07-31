@@ -133,13 +133,7 @@ Listener::receive_decode_msg() {
 
     else if (cmd_name == "start-nrl-list") {
         return DetectorMessages::StartNrlList {
-            .started = false, .full_size = false
-        };
-    }
-
-    else if (cmd_name == "start-nrl-full-size-list") {
-        return DetectorMessages::StartNrlList {
-            .started = false, .full_size = true
+            .started = false
         };
     }
 

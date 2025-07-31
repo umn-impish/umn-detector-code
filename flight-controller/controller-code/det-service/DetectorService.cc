@@ -467,14 +467,10 @@ void DetectorService::check_save_nrl_buffers() {
     }
 }
 
-void DetectorService::start_nrl_list_mode(bool full_size) {
+void DetectorService::start_nrl_list_mode() {
     await_pps_edge();
     // wait for pps before starting because its pretty cool to do that B)
     for (auto& [_, ctrl] : hafx_ctrl) {
-        // Indicate if we take "full-size" or "normal"
-        // NRL data
-        ctrl->use_full_size(full_size);
-
         // clear both NRL buffers
         ctrl->swap_nrl_buffer(0);
         ctrl->restart_list_mode();
@@ -496,7 +492,7 @@ void DetectorService::handle_command(dm::StartNrlList cmd) {
     if (not cmd.started) {
         // Start the NRL data collection in "full-size"
         // or "not full size" saving mode
-        start_nrl_list_mode(cmd.full_size);
+        start_nrl_list_mode();
         cmd.started = true;
         finish(cmd);
         return;

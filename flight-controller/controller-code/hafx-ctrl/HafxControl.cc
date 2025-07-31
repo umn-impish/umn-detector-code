@@ -16,8 +16,7 @@ HafxControl::HafxControl(std::shared_ptr<SipmUsb::UsbManager> driver_, DetectorP
                   DetectorMessages::HafxNominalSpectrumStatus> >(
                   ports.science, SLICES_PER_SECOND)},
     nrl_data_saver{std::make_unique<DataSaver>(ports.science)}, // will need different udp capture flags than time slice nominal
-    debug_saver{std::make_unique<DataSaver>(ports.debug)},
-    save_full_size{false}
+    debug_saver{std::make_unique<DataSaver>(ports.debug)}
 { }
 
 DetectorMessages::HafxHealth HafxControl::generate_health() {
@@ -156,10 +155,6 @@ HafxControl::read_nrl_buffer() {
     return nrl_buf.decode();
 }
 
-void HafxControl::use_full_size(bool full_size) {
-    this->save_full_size = full_size;
-}
-
 void HafxControl::poll_save_nrl_list() {
     /*
      * Check if NRL list buffers 0 and 1 are full,
@@ -188,24 +183,16 @@ void HafxControl::poll_save_nrl_list() {
             has_pps = has_pps || d.was_pps;
         }
         if (!has_pps) {
-            log_info("there was no PPS");
+            log_info("there was no PPS in most recent NRL event list");
             return;
         }
 
         std::string evts_save;
         auto num_events = data.size();
-        if (save_full_size) {
-            evts_save = std::string{
-                reinterpret_cast<const char*>(data.data()),
-                data.size() * sizeof(decltype(data)::value_type)
-            };
-        } else {
-            auto stripped = strip_nrl_data(std::move(data));
-            evts_save = std::string{
-                reinterpret_cast<const char*>(stripped.data()),
-                stripped.size() * sizeof(decltype(stripped)::value_type)
-            };
-        }
+        evts_save = std::string{
+            reinterpret_cast<const char*>(data.data()),
+            data.size() * sizeof(decltype(data)::value_type)
+        };
 
         // Put some metadata into strings to save
         // Never gonna be more than 2048 events;
@@ -218,27 +205,14 @@ void HafxControl::poll_save_nrl_list() {
             reinterpret_cast<const char*>(&time_after_read),
             sizeof(time_after_read)};
 
-        // The data saver we want to use depends on
-        // if we are taking "full-size" data vs not
-        auto &saver = (save_full_size? this->debug_saver : this->nrl_data_saver);
-
-        // If we are saving to the "debug" data path,
-        // we need to include the data identifier in the stream
-        const auto debug_tag =
-            static_cast<char>(DetectorMessages::HafxDebug::Type::FullSizeNrlListMode);
-        auto prefix = (
-            save_full_size?
-            std::string{&debug_tag, 1} :
-            std::string{""}
-        );
+        auto &saver = this->nrl_data_saver;
 
         // Save order:
-        // [- (1B) if full size: the full-size data tag for debug saver]
         //  - (2B) # of events recorded
         //  - (N x M)B data; N is num events, M is event size
         //  - (4B) timestamp immediately after readout
         // save all at once so we don't get misaligned files
-        saver->add(prefix + size_save + evts_save + timestamp_save);
+        saver->add(size_save + evts_save + timestamp_save);
     };
 
     // Save buffers 0, 1
@@ -341,29 +315,6 @@ void HafxControl::update_registers(SourceT const& source_regs) {
         con.registers[i] = source_regs[i];
     }
     driver->write(con, SipmUsb::MemoryType::nvram);
-}
-
-std::vector<DetectorMessages::StrippedNrlDataPoint>
-strip_nrl_data(std::vector<SipmUsb::NrlListDataPoint>&& vec) {
-    /*
-     * The original data format coming out of the NRL list mode
-     * is to store the wall clock as a 51-bit number, in multiples
-     * of 25 nanoseconds. That could reach almost two year's worth
-     * of data (650 days).
-     *
-     * Instead, in this case, we scale down the precision of the clock,
-     * and assume that the data will only span times on the order
-     * of ~5-10s. Then we don't need as many bits for the wall clock time.
-     * We can also drop some other useless information--
-     * we don't care about pulse shape discrimination.
-     * */
-
-    using stripped_t = DetectorMessages::StrippedNrlDataPoint;
-    std::vector<stripped_t> ret;
-    for (const auto& orig : vec) {
-        ret.emplace_back(stripped_t::from(orig));
-    }
-    return ret;
 }
 
 } // namespace Detector
