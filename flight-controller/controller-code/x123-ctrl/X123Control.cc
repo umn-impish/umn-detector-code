@@ -224,12 +224,19 @@ void X123Control::update_settings(
         log_debug("new ascii settings (service): " + s);
         settings.ascii_settings_length = new_settings.ascii_settings_length;
         settings.ascii_settings = new_settings.ascii_settings;
-        upload_ascii_settings(std::string(settings.ascii_settings.data(), settings.ascii_settings_length));
-
-        num_histogram_bins_from_ram();
     }
 
     settings_saver->write_struct<DetectorMessages::X123Settings>(settings);
+
+    // Write the settings to the X-123 after everything else
+    // has been verified/configured
+    upload_ascii_settings(
+        std::string(
+            settings.ascii_settings.data(),
+            settings.ascii_settings_length
+        )
+    );
+    num_histogram_bins_from_ram();
 }
 
 DetectorMessages::X123Settings
