@@ -1,20 +1,8 @@
 # Python code for IMPRESS+EXACT+IMPISH
 
-## INSTALL
-### From `pypi` (normal use)
-#### To install _all_ code, including ground scripts
-`pip install umndet.[all]`
-#### To install _just the structs_ used in flight
-`pip install -e umndet`
+## For setup, see `docs/python-setup.md`
 
-### For development
-First, `cd` into this directory. Then,
-#### To install _all_ code, including ground scripts
-`pip install -e .[all]`
-#### To install _just the structs_ used in flight
-`pip install -e .`
-
-## USE
+## How to use
 ### Import what you want in Python, e.g.: `from umndet.common import impress_exact_structs as ies`
 
 ## Common code between flight/ground (`umn_detector/common`)

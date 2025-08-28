@@ -100,6 +100,11 @@ void DetectorService::reconnect_detectors() {
 
     for (const auto& [chan, sn] : hafx_serial_nums) {
         if (!bridgeport_device_manager->device_map.contains(sn)) {
+            log_warning(
+                "HaFX serial number '" + sn + "' is not connected. "
+                "Ensure you have the correct serial numbers configured "
+                "in the environment variables."
+            );
             continue;
         }
         try {

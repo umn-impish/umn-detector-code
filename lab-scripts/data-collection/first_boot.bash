@@ -21,7 +21,7 @@ echo "wake" > $det_udp_dev
 
 ### X-123 registers
 # tell controller we want to read 1024-bins histograms from X-123
-echo 'settings-update x123 ascii_settings MCAC=1024;' > $det_udp_dev
+echo 'settings-update x123 ascii_settings MCAC=2048;THFA=22;THSL=0.378;GAIN=10;' > $det_udp_dev
 # X-123 gets binned down to just 4 big histogram bins
 # Leave this empty for now (don't rebin the X-123 data at all)
 # echo 'settings-update x123 adc_rebin_edges 0 256 512 768 1024' > $det_udp_dev

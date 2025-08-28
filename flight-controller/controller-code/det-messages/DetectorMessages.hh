@@ -62,7 +62,7 @@ namespace DetectorMessages {
         uint32_t ack_err_retries;
 
         uint16_t ascii_settings_length;
-        std::array<char, 512> ascii_settings;
+        std::array<char, 65530ULL> ascii_settings;
 
         uint16_t adc_rebin_edges_length;
         std::array<uint32_t, 128> adc_rebin_edges;

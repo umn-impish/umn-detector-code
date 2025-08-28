@@ -1,4 +1,6 @@
-# Documents pertaining to flight code
+# Documents pertaining to flight and ground code
+- `python-setup.md`: How to set up the Python package from this repository for use in decoding/reading flight data
 - `detector-commands.md`: list of commands accepted by the detector flight code
-- `setup-guide.md`: how to set up the flight code and associated processes for "checkout"
-   (e.g. from MSU or elsewhere)
+- `impress-usage.md`: how to set up the flight code and associated processes for checkout of IMPRESS firmware
+- `exact-usage.md`: how to set up flight code, and Pi network on the SmallSat LAN/internet bridge, and acquire NRL data
+- `detector-configurations.md`: How to change settings for the X-123 and HaFX detectors using the flight utilities`
