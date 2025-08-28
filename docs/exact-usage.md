@@ -3,13 +3,16 @@ Assumes you have the following equipment:
 - DS3231 real-time clock or other 1Hz square wave source
 - Bridgeport board + SiPMs + scintillator with the NRL list mode firwmare
 - RPi CM3+ or other compatible device
+- Radioactive source (for some later steps)
 
 The steps are in `## heading 2` size
 
-## flash a microsd with rpi os lite 64 bit using rpi imager
+## 1. Flash a microsd with rpi os lite 64 bit using rpi imager
 You can download the RPi imager from its website: [imager](https://www.raspberrypi.com/software/)
 
-## boot into the Pi and set up the timezone and localization options via `raspi-config`
+## 2. Boot into the Pi and set up the timezone and localization options via `raspi-config`
+**Ensure the ethernet cable is plugged in**
+
 - timezone: chicago
 - keyboard: generic, US layout
 - locale: `EN_US`
@@ -19,7 +22,7 @@ While you're at it, make a couple more changes in raspi-config:
 - enable the SSH server
 - enable the i2c interface
 
-## 3. set a static IP address for the Pi using nmtui
+## 3. Set a static IP address for the Pi using nmtui
 - run `sudo nmtui`
 - hit `Edit a connection`
 - Wired connection 1
@@ -36,14 +39,16 @@ if it doesn't work, double check things are configured properly
 
 **when the network is set up, you can connect via SSH so it's easier to copy and paste**
 
-## 4. install required packages; this will take a few minutes
+## 4. Install required packages; this will take a few minutes
 ```bash
 sudo apt update
 sudo apt upgrade -y
+# It may ask about initramfs or other packages.
+# Pick the option that says "the package maintainer's version"
 sudo apt install git cmake gcc g++ build-essential libboost-thread-dev libusb-1.0-0-dev libgtest-dev libsystemd-dev libgpiod-dev python3-smbus
 ```
 
-## 5. clone and build the umn-detector-code
+## 5. Clone and build the umn-detector-code
 ```bash
 git clone https://github.com/umn-impish/umn-detector-code.git
 cd umn-detector-code/flight-controller
@@ -52,9 +57,15 @@ cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j3
 sudo make install
+
+# After make install, run these commands,
+# and restart any other SSH sessions you have open
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+exec $SHELL
 ```
 
-## 6. once the flight utility programs are installed, we need to configure the DS3231 real-time clock to work as a PPS source for testing.
+## 6. Once the flight utility programs are installed, we need to configure the DS3231 real-time clock to work as a PPS source for testing.
 If you are yousing a real GPS for the PPS, the configuration will be completely different.
 
 The RTC data sheet is here: [DS3231 data sheet](https://www.analog.com/media/en/technical-documentation/data-sheets/ds3231.pdf).
@@ -114,21 +125,29 @@ bus.close()
 
 Once you run the snippet,
     check that the square wave output is working with either an oscilloscope or multimeter.
+The multimeter will flash between 0V and 3.3V at about a 1 second period.
+If you use the oscilloscope, be sure to DC couple it.
 
-## 7. run the program tests
+## 7. Run the program tests
 Go back to `umn-detector-code/flight-controller/build` if you left it.
 Then run `make test` to run some program tests.
-Most of them should pass, except for the `sipm3k.TimeSliceRead`, if everything
-is configured properly.
+Most of them should pass,
+    except for the `sipm3k.TimeSliceRead`,
+    if everything is configured properly.
+If you don't have a radioactive source near the detector at this point,
+    the `sipm3k.FillListBufferAndRead` test will likely fail.
 If some tests fail, go back and double check everything.
 
-## 8. go to the lab-scripts folder and run some scripts
+## 8. Go to the lab-scripts folder and run some scripts
 For NRL data acquistion,
     a 1Hz square wave needs to be connected to GPIO 31 on the Pi,
     and to the GPIO S0 on the Bridgeport board.
 The 1Hz strobe synchronizes the system clock and data.
 
-To get some data, do the following
+To get some data, do the following.
+
+**Be sure to put a radioactive source near the detector
+    if you haven't already.**
 
 In one terminal, run the `view_logs` script and monitor it for issues
 ```bash
@@ -143,17 +162,23 @@ cd umn-detector-code/lab-scripts/data-collection/exact_specific
 # Start relevant programs
 ./nrl_init.bash
 
-# i'm just using c1 as the identifier here, depending on the envars.bash file,
-# you can use c1, m1, m5, or x1
-./start_nrl_list.bash c1
+# This will take data for 10s, you can make it longer if you want
+./start_nrl_list.bash 10
 ```
 
-If you see no activity aside from the initialization info when running `view_logs`, the serial numbers might be misconfigured. Edit them in `$HOME/detector-config/envars.bash`. The available serial numbers get listed in the logs. For EM testing, there should only be one connected.
+If you see no activity aside from the initialization info when running `view_logs`,
+    the serial numbers might be misconfigured.
+Edit them in `$HOME/detector-config/envars.bash`.
+The available serial numbers get listed in the logs.
+For EM testing,
+    there should only be one connected.
 
 If you see errors in `view_logs`, particularly a `std::out_of_range`, then
 the serial numbers configured in `envars.bash` are probably wrong and you need to
 go in and update them. Quit the programs using `quit.bash`, update the envars,
 and try again.
+
+**After editing the serial numbers, be sure to `source $HOME/detector-config/envars.bash`.**
 
 You should see something along these lines print out in the logs
 ```
