@@ -1,5 +1,7 @@
 data
 downlink
+live
+completed
 *.gz
 *.swp
 *.zip
