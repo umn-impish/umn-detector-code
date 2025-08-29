@@ -103,6 +103,14 @@ void HafxControl::read_save_debug() {
     driver->read(dbgc, SipmUsb::MemoryType::ram);
     const auto& buf = dbgc.registers;
 
+    std::stringstream ss;
+    ss << '[';
+    for (const auto r : buf) {
+        ss << r << ' ';
+    }
+    ss << ']';
+    log_debug("received hafx registers: " + ss.str());
+
     std::stringstream to_save;
     to_save.write(reinterpret_cast<char const*>(&tag), sizeof(tag));
     to_save.write(reinterpret_cast<char const*>(buf.data()), buf.size() * sizeof(buf[0]));
