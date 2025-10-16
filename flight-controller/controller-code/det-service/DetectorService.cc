@@ -395,7 +395,7 @@ void DetectorService::handle_command(dm::CollectNominal cmd) {
         nominal_timer = TimerLifetime::create(queue.push_delay(cmd, TIME_SLICE_DELAY));
     };
 
-    if (not cmd.started) {
+    if (!cmd.started) {
         start_nominal();
         cmd.started = true;
         finish(cmd);
@@ -472,36 +472,25 @@ void DetectorService::check_save_nrl_buffers() {
     }
 }
 
-void DetectorService::start_nrl_list_mode(bool full_size) {
+void DetectorService::start_nrl_list_mode() {
+    // wait for pps before starting in order to synchronize the
+    // data on our end with the PPS, akin to IMPRESS
     await_pps_edge();
-    // wait for pps before starting because its pretty cool to do that B)
     for (auto& [_, ctrl] : hafx_ctrl) {
-        // Indicate if we take "full-size" or "normal"
-        // NRL data
-        ctrl->use_full_size(full_size);
-
-        // clear both NRL buffers
-        ctrl->swap_nrl_buffer(0);
-        ctrl->restart_list_mode();
-
-        ctrl->swap_nrl_buffer(1);
         ctrl->restart_list_mode();
     }
 }
 
 void DetectorService::handle_command(dm::StartNrlList cmd) {
-    // copied format from Time slice stuff above
     auto finish = [this](auto cmd) {
-        constexpr auto CHECK_BUFFER_FULL_DELAY = 250ms;
+        constexpr auto CHECK_BUFFER_FULL_DELAY = 100ms;
         hafx_nrl_list_timer = TimerLifetime::create(
             queue.push_delay(cmd, CHECK_BUFFER_FULL_DELAY)
         );
     };
 
-    if (not cmd.started) {
-        // Start the NRL data collection in "full-size"
-        // or "not full size" saving mode
-        start_nrl_list_mode(cmd.full_size);
+    if (!cmd.started) {
+        start_nrl_list_mode();
         cmd.started = true;
         finish(cmd);
         return;

@@ -12,6 +12,11 @@ target_link_libraries(
         logging
 )
 
+# FindBoost removed in CMake 3.30
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW)
+endif()
+
 # Boost
 find_package(Boost ${BOOSTVERSION} REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})

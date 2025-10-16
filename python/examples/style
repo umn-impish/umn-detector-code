@@ -1,0 +1,45 @@
+figure.constrained_layout.use: True
+date.converter               : concise
+
+font.size           : 12
+
+lines.linewidth     : 2
+
+axes.titlesize      : 16
+axes.labelsize      : 12
+axes.titlepad       : 12
+
+figure.figsize      : 10, 8 
+figure.titlesize    : 16
+savefig.facecolor   : white
+
+lines.markersize    : 8
+
+legend.fontsize     : 12
+
+xtick.labelsize     : 12
+ytick.labelsize     : 12
+
+xtick.direction     : in
+xtick.top           : True
+xtick.minor.bottom  : True
+xtick.major.bottom  : True
+xtick.major.top     : True
+xtick.minor.top     : True
+xtick.minor.visible : True
+xtick.major.size    : 8
+xtick.minor.size    : 4
+xtick.major.width   : 1.5
+xtick.minor.width   : 1.5
+
+ytick.direction     : in
+ytick.right         : True
+ytick.minor.left    : True
+ytick.minor.right   : True
+ytick.minor.visible : True
+ytick.major.left    : True
+ytick.major.right   : True
+ytick.major.size    : 8
+ytick.minor.size    : 4  
+ytick.major.width   : 1.5
+ytick.minor.width   : 1.5
