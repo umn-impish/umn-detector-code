@@ -98,7 +98,7 @@ def read_hafx_debug(fn: str, open_func: Callable) -> list[ies.HafxDebug]:
     return generic_read_binary(fn, open_func, read_elt)
 
 
-def read_stripped_nrl_list(fn: str, open_func: Callable) -> list:
+def read_nrl_list(fn: str, open_func: Callable) -> list:
     '''
     Read a file full of stripped NRL list mode data
     into a bunch of dictionaries.
@@ -114,7 +114,7 @@ def read_stripped_nrl_list(fn: str, open_func: Callable) -> list:
         num_events, = struct.unpack('<H', f.read(2))
         evts = []
         for _ in range(num_events):
-            d = ies.StrippedNrlDataPoint()
+            d = ies.FullSizeNrlDataPoint()
             f.readinto(d)
             evts.append(d)
         timestamp, = struct.unpack('<L', f.read(4))

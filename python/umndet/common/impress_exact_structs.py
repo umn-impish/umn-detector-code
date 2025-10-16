@@ -287,18 +287,3 @@ class FullSizeNrlDataPoint(ctypes.LittleEndianStructure):
 
     def to_json(self):
         return {field[0]: getattr(self, field[0]) for field in self._fields_}
-
-class StrippedNrlDataPoint(ctypes.LittleEndianStructure):
-    NS_PER_TICK = 200
-    _pack_ = 1
-    _fields_ = (
-        ('relative_timestamp', ctypes.c_uint32, 25),
-        ('energy', ctypes.c_uint32, 4),
-        ('was_pps', ctypes.c_uint32, 1),
-        ('piled_up', ctypes.c_uint32, 1),
-        ('out_of_range', ctypes.c_uint32, 1),
-    )
-
-    def to_json(self):
-        return {field[0]: getattr(self, field[0]) for field in self._fields_}
-
