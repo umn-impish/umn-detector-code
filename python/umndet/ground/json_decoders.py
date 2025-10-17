@@ -282,7 +282,7 @@ def jsonify_exact_buffer(buffer: dict[str, object]) -> dict[str, object]:
        and "jsonify" them into a list of JSON objects
        represented as dictionaries. 
     '''
-    all_events, rel_times = list, list()
+    all_events, rel_times = list(), list()
     last_pps_rel_time = None
     for i, e in enumerate(buffer['events']):
         all_events.append(e)
