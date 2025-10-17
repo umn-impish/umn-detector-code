@@ -8,23 +8,21 @@ import time
 import umndet.common.impress_exact_structs as ies
 from umndet.common.constants import DATE_FMT
 
+
 def main():
     p = argparse.ArgumentParser(
-        description='simulate IMPRESS science data (time_slices)')
+        description="simulate IMPRESS science data (time_slices)"
+    )
+    p.add_argument("data_dir", default="test-data", help="directory to save data to")
     p.add_argument(
-        'data_dir',
-        default='test-data',
-        help='directory to save data to')
+        "num_files", type=int, default=30, help="number of data files to generate"
+    )
     p.add_argument(
-        'num_files',
+        "seconds_per_file",
         type=int,
         default=30,
-        help='number of data files to generate')
-    p.add_argument(
-        'seconds_per_file',
-        type=int,
-        default=30,
-        help='number of seconds per time_slice file')
+        help="number of seconds per time_slice file",
+    )
     args = p.parse_args()
 
     os.makedirs(args.data_dir, exist_ok=True)
@@ -32,15 +30,15 @@ def main():
     ts = int(time.time())
     for slice_num in range(args.num_files):
         time_str = dt.datetime.fromtimestamp(ts, dt.UTC).strftime(DATE_FMT)
-        output_file = f'{args.data_dir}/sim-hafx-c1-hist_{time_str}_0.bin.gz'
-        with gzip.open(output_file, 'wb') as f:
+        output_file = f"{args.data_dir}/sim-hafx-c1-hist_{time_str}_0.bin.gz"
+        with gzip.open(output_file, "wb") as f:
             for sec in range(args.seconds_per_file):
                 for i in range(32):
                     f.write(simulate_single_slice(i, ts if (i % 32 == 0) else 0))
                 ts += 1
 
 
-def simulate_single_slice(frame_num: int, time_anchor: int=0) -> ies.NominalHafx:
+def simulate_single_slice(frame_num: int, time_anchor: int = 0) -> ies.NominalHafx:
     ret = ies.NominalHafx()
 
     # reasonable amt during a solar flare in 32ms
@@ -69,5 +67,5 @@ def simulate_single_slice(frame_num: int, time_anchor: int=0) -> ies.NominalHafx
     return ret
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

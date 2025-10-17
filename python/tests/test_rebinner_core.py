@@ -7,10 +7,11 @@ from umndet.rebinner import rebinner_core as rebc
 from umndet.tools import simulate_slices as ssl
 from umndet.common.impress_exact_structs import NominalHafx
 
-def simulate_chunk(num: int=1024) -> list[NominalHafx]:
-    '''
+
+def simulate_chunk(num: int = 1024) -> list[NominalHafx]:
+    """
     Simulate some time slices for testing with random data.
-    '''
+    """
     ts = int(time.time())
     ret = list()
     for i in range(num):
@@ -24,9 +25,9 @@ def simulate_chunk(num: int=1024) -> list[NominalHafx]:
 
 
 def test_time_rebin():
-    '''
+    """
     Tests if rebinner_core.rebin_times function properly works.
-    '''
+    """
     # Argument validation tests
     with pytest.raises(ValueError):
         rebc.rebin_times([], 31)
@@ -46,10 +47,10 @@ def test_time_rebin():
 
     # these should remain unchanged after rebinning as long as we sum everything
     SAME_TOTAL_ATTRS = (
-        'num_evts',
-        'num_triggers',
-        'dead_time',
-        'anode_current',
+        "num_evts",
+        "num_triggers",
+        "dead_time",
+        "anode_current",
     )
 
     num_sum_iter = (32 * x for x in range(1, 10 + 1))
@@ -65,9 +66,9 @@ def test_time_rebin():
 
 
 def test_energy_rebin():
-    '''
+    """
     Tests if rebinner_core.rebin_energies function properly works.
-    '''
+    """
     data = simulate_chunk(num=2048)
     adc_edges = list(range(125))
     max_edges = 124
@@ -75,14 +76,14 @@ def test_energy_rebin():
 
     # these should remain unchanged after rebinning
     SAME_ATTRS = (
-        'ch',
-        'buffer_number',
-        'num_evts',
-        'num_triggers',
-        'dead_time',
-        'anode_current',
-        'time_anchor',
-        'missed_pps',
+        "ch",
+        "buffer_number",
+        "num_evts",
+        "num_triggers",
+        "dead_time",
+        "anode_current",
+        "time_anchor",
+        "missed_pps",
     )
 
     for _ in range(attempts):
@@ -91,9 +92,8 @@ def test_energy_rebin():
         rebin_edges.sort()
         rebinned = rebc.rebin_energies(data, rebin_edges)
 
-        for (reb, orig) in zip(rebinned, data):
+        for reb, orig in zip(rebinned, data):
             # Counts should not change after rebinning
             assert sum(reb.histogram) == sum(orig.histogram)
             for a in SAME_ATTRS:
                 assert getattr(reb, a) == getattr(orig, a)
-

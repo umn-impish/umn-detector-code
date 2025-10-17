@@ -1,11 +1,11 @@
 import datetime as dt
 
-DATE_FMT = '%Y-%j-%H-%M-%S'
+DATE_FMT = "%Y-%j-%H-%M-%S"
 
 # Keep track of rebin param revisions here
 
 # June 26, 2024 - testing revision
-FIRST_REVISION = dt.datetime.strptime('2024-178', '%Y-%j')
+FIRST_REVISION = dt.datetime.strptime("2024-178", "%Y-%j")
 FIRST_NUM_TIMES_REBIN = 128
 FIRST_NEW_ENERGY_EDGES = (0, 10, 20, 30, 40, 60, 90, 124)
 
@@ -16,10 +16,8 @@ _first_bins = [
     # Start at 5 because the first 4 bins are housekeeping
     # in the IMPRESS firmware
     5 + histogram_bin
-
     # 123 bins (5 through 127)
     for histogram_bin in range(_num_to_map)
-
     # mapped linearly to 2048 ADC bins
     for _ in range(int(_num_adc / _num_to_map))
 ]
@@ -28,20 +26,21 @@ _first_bins = [
 _first_bins += [127] * (_num_adc - len(_first_bins))
 
 # give the bins a "public" name
-FIRST_BRIDGEPORT_EDGES = tuple(
-    _first_bins
-)
+FIRST_BRIDGEPORT_EDGES = tuple(_first_bins)
 
 
 # Set revision in use here
-REV = 'FIRST'
+REV = "FIRST"
+
+
 # Variables get selected based on REV
-fetcher = lambda rev, ident: globals()[rev + ident]
+def fetcher(rev, ident):
+    return globals()[rev + ident]
 
 
 # Current parameters in-use
-NUM_TIMES_REBIN = fetcher(REV, '_NUM_TIMES_REBIN')
-NEW_ENERGY_EDGES = fetcher(REV, '_NEW_ENERGY_EDGES')
+NUM_TIMES_REBIN = fetcher(REV, "_NUM_TIMES_REBIN")
+NEW_ENERGY_EDGES = fetcher(REV, "_NEW_ENERGY_EDGES")
 
 ## These are the bin edges which get sent to the Bridgeport detectors
-BRIDGEPORT_EDGES = fetcher(REV, '_BRIDGEPORT_EDGES')
+BRIDGEPORT_EDGES = fetcher(REV, "_BRIDGEPORT_EDGES")
