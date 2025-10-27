@@ -47,28 +47,4 @@ echo "settings-update hafx m1 arm_ctrl $arm_ctrl" > $det_udp_dev
 echo "settings-update hafx m5 arm_ctrl $arm_ctrl" > $det_udp_dev
 echo "settings-update hafx x1 arm_ctrl $arm_ctrl" > $det_udp_dev
 
-# update the ADC bin mapping
-# this is the custom mapping from 2048 ADC bins to 123 IMPRESS bins
-# ---
-# NB: next line requres `pip install -e .` inside the
-# detector Python directory
-generate-impress-bin-txt
-# generates a file called bin-map.txt
-# with the latest 2048-ADC to 123-bin conversion
-
-# add some text in the bin-map.txt so we can cat it directly to the service port
-echo -n "settings-update hafx c1 adc_rebin_edges " | cat - bin-map.txt > temp.txt && mv temp.txt bin-map.txt
-# cat it to c1 detector 1st
-cat bin-map.txt > $det_udp_dev
-
-# edit the detector identifier with some magic
-sed -i '1s/^\(.\{21\}\).\{2\}/\1m1/' bin-map.txt
-cat bin-map.txt > $det_udp_dev
-sed -i '1s/^\(.\{21\}\).\{2\}/\1m5/' bin-map.txt
-cat bin-map.txt > $det_udp_dev
-sed -i '1s/^\(.\{21\}\).\{2\}/\1x1/' bin-map.txt
-cat bin-map.txt > $det_udp_dev
-
-rm 'bin-map.txt'
-
 echo "sleep" > $det_udp_dev
