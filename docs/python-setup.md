@@ -61,7 +61,7 @@ Now,
 ```bash
 git clone https://github.com/umn-impish/umn-detector-code.git
 cd umn-detector-code/python
-uv pip install -e .[all]
+uv pip install -e .'[all]'
 ```
 
 Finally,
