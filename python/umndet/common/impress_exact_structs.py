@@ -217,7 +217,7 @@ class HafxDebug:
     # * Data sizes are taken from MDS documentation
     #   https://www.bridgeportinstruments.com/products/software/wxMCA_doc/documentation/english/mds/mca3k/introduction.html
     TYPE_DECODE_MAP = [
-        ("arm_ctrl", "<12f"),
+        ("arm_ctrl", "<64f"),
         ("arm_cal", "<64f"),
         ("arm_status", "<7f"),
         ("fpga_ctrl", "<16H"),
