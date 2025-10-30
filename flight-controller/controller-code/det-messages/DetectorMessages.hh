@@ -34,7 +34,7 @@ namespace DetectorMessages {
         std::array<float, 64> arm_cal_regs;
 
         bool fpga_weights_regs_present;
-        std::array<uint16_t, 16> fpga_weights_regs;
+        std::array<uint16_t, 1024> fpga_weights_regs;
     };
 
     struct HafxDebug {
