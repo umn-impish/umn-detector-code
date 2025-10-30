@@ -103,7 +103,7 @@ namespace SipmUsb
         std::vector<ListModeDataPoint> parse_list_buffer() const;
     };
 
-    using FpgaWeights = FpgaIoContainer<uint16_t, 16, 6>;
+    using FpgaWeights = FpgaIoContainer<uint16_t, 1024, 6>;
 
     using FpgaAction = FpgaIoContainer<uint16_t, 4, 7>;
     static constexpr FpgaAction FPGA_ACTION_START_NEW_LIST_ACQUISITION = {
