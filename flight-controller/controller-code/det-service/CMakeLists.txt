@@ -1,6 +1,3 @@
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(GPIOD REQUIRED IMPORTED_TARGET libgpiod)
-
 add_library(det-service STATIC)
 target_sources(
     det-service
@@ -21,5 +18,4 @@ target_link_libraries(
         hafx-ctrl
         x123-ctrl
         pthread
-	PkgConfig::GPIOD
 )
