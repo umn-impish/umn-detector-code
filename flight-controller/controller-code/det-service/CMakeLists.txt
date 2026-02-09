@@ -1,5 +1,4 @@
 add_library(det-service STATIC)
-
 target_sources(
     det-service
     PRIVATE
@@ -18,6 +17,7 @@ target_link_libraries(
     	atomic
         hafx-ctrl
         x123-ctrl
-	    pthread
-        raii-gpio
+        pthread
 )
+
+add_subdirectory(tests)

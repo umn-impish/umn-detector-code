@@ -1,6 +1,8 @@
 set(DET_PROJ_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_C_STANDARD 23)
+set(CMAKE_C_STANDARD_REQUIRED True)
 set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 cmake_policy(SET CMP0076 NEW)
@@ -8,7 +10,8 @@ cmake_policy(SET CMP0076 NEW)
 enable_testing()
 find_package(GTest)
 
-add_subdirectory(raii-gpio)
+# Helper program
+add_subdirectory(edge-detector)
 
 # Order matters (dependencies)
 add_subdirectory(logging)
@@ -32,7 +35,7 @@ add_subdirectory(utilities)
 # Install target
 install(
     # baseline programs required to function
-    TARGETS det-controller
+    TARGETS det-controller detect-edge
     COMPONENT binaries
 )
 
