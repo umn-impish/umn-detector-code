@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 
     chip = gpiod_chip_open("/dev/gpiochip0");
     if (chip == nullptr) {
-        log_error("Can't open GPIO chip for PPS detect");
+        log_error("Can't open GPIO chip for edge detect");
         exit_code = 2;
         goto quit;
     }
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (gpiod_line_config_add_line_settings(cfg, &detect_pin, 1, settings) != 0) {
-        log_error("Cannot set GPIOD line config settings for PPS pin");
+        log_error("Cannot set GPIOD line config settings for given pin");
         exit_code = 2;
         goto quit;
     }
@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
         chip, nullptr, cfg
     );
     if (line_req == nullptr) {
-        log_error("Can't get GPIO line request for PPS pin");
+        log_error("Can't get GPIO line request for given pin");
         exit_code = 2;
         goto quit;
     }
