@@ -365,6 +365,23 @@ void DetectorService::handle_command(dm::QueryX123DebugHistogram) {
 
 void DetectorService::await_pps_edge() {
     static const uint8_t PPS_DETECT_PIN = 31;
+    auto* chip = gpiod_chip_open("gpiochip0");
+    if (chip == nullptr) {
+        log_error("Can't open GPIO chip for PPS detect");
+        return;
+    }
+
+    auto *cfg = gpiod_request_config_new();
+    if (cfg == nullptr) {
+        log_error("Can't get chip config");
+        goto closechip;
+    }
+
+closeconfig:
+    gpiod_request_config_free(cfg);
+closechip:
+    gpiod_chip_close(chip);
+   /*
     RaiiGpioPin p{PPS_DETECT_PIN, RaiiGpioPin::Operation::rising_edge};
     // wait 2s for PPS
     struct timespec timeout {.tv_sec = 2, .tv_nsec = 0};
@@ -376,6 +393,7 @@ void DetectorService::await_pps_edge() {
             " seconds"
         );
     }
+    */
 }
 
 void DetectorService::read_all_time_slices() {

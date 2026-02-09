@@ -1,5 +1,7 @@
-add_library(det-service STATIC)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GPIOD REQUIRED IMPORTED_TARGET libgpiod)
 
+add_library(det-service STATIC)
 target_sources(
     det-service
     PRIVATE
@@ -18,6 +20,6 @@ target_link_libraries(
     	atomic
         hafx-ctrl
         x123-ctrl
-	    pthread
-        raii-gpio
+        pthread
+	PkgConfig::GPIOD
 )

@@ -12,8 +12,7 @@
 #include <HafxControl.hh>
 #include <X123Control.hh>
 
-// for monitoring PPS
-#include "raii_gpio.h"
+#include <gpiod.h>
 
 class DetectorService {
 public:

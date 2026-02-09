@@ -8,8 +8,6 @@ cmake_policy(SET CMP0076 NEW)
 enable_testing()
 find_package(GTest)
 
-add_subdirectory(raii-gpio)
-
 # Order matters (dependencies)
 add_subdirectory(logging)
 add_subdirectory(det-messages)
