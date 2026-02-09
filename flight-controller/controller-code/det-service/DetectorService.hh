@@ -58,8 +58,10 @@ public:
     void put_hafx_serial_nums(
         std::unordered_map<DetectorMessages::HafxChannel, std::string>);
 
-    const int socket_fd;
+    // Wait for an incoming PPS edge
+    bool await_pps_edge() const;
 
+    const int socket_fd;
 protected:
     virtual std::vector<std::byte> generate_health();
 
@@ -116,7 +118,6 @@ private:
     );
 
     // helpers
-    void await_pps_edge();
     void initialize();
     void start_nominal();
     void read_all_time_slices();

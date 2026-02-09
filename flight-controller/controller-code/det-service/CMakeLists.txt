@@ -19,3 +19,5 @@ target_link_libraries(
         x123-ctrl
         pthread
 )
+
+add_subdirectory(tests)

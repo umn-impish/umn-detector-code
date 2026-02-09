@@ -363,11 +363,8 @@ void DetectorService::handle_command(dm::QueryX123DebugHistogram) {
     x123_ctrl->read_save_debug_histogram();
 }
 
-void DetectorService::await_pps_edge() {
-    auto detected = (0 == std::system("edge-detect 31"));
-    if (!detected) {
-        log_warning("Cannot obtain PPS detect");
-    }
+bool DetectorService::await_pps_edge() const {
+    return (0 == std::system("detect-edge 31"));
 }
 
 void DetectorService::read_all_time_slices() {
@@ -407,7 +404,9 @@ void DetectorService::start_nominal() {
     // wait until the PPS comes in to start these operations
     // for a good initial time sync
     // assumption: all of the rest of the init process can take place in < 1s
-    await_pps_edge();
+    if (!await_pps_edge()) {
+        log_warning("Cannot obtain PPS detect for IMPRESS mode");
+    }
 
     // set to "nothing" value for initial synchronizing read
     for (const auto& [ch, ctrl] : hafx_ctrl) {
@@ -467,7 +466,9 @@ void DetectorService::check_save_nrl_buffers() {
 void DetectorService::start_nrl_list_mode() {
     // wait for pps before starting in order to synchronize the
     // data on our end with the PPS, akin to IMPRESS
-    await_pps_edge();
+    if (!await_pps_edge()) {
+        log_warning("Can't get PPS detect for NRL list mode");
+    }
 
     // wait for a little bit of an offset so the timekeeping doesn't get
     // too close to the second tick edge;
