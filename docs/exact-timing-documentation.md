@@ -11,7 +11,7 @@ The EXACT data product is packetized into chunks of events with a timestamp.
 The data produced by each Bridgeport Instruments
     board comes in blocks of ≤ 2048 events.
 Usually each block is 2048 events,
-    but sometimes it is be fewer.
+    but sometimes it is fewer.
 Each event occupies 12B and contains the energy and time of the incident photon,
     as well as other diagnostic data like if the event
     led to integral overflow,
