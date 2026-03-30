@@ -64,7 +64,7 @@ The PPS rising edge is used to ensure synchronization,
     so be sure that the rising edge is configured to align with the clock tick
     in any GPS confiruation that needs to happen.
 The computer which stamps the time must also be synchronized to GPS time
-    using e.g. [chronyd]().
+    using e.g. [chronyd](https://linux.die.net/man/8/chronyd).
 In other terms,
     the computer stamping the time (for EXACT, the Raspberry Pi)
     is a [Stratum 1 NTP](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/deployment_guide/s1-ntp_strata) device.
