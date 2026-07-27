@@ -146,7 +146,7 @@ void DetectorService::reconnect_detectors() {
 
         constexpr uint32_t HEALTH_CADENCE_SEC = 10;
         push_message(DetectorMessages::StartPeriodicHealth{
-            .sec_between = HEALTH_CADENCE_SEC,
+            .seconds_between = HEALTH_CADENCE_SEC,
             .fwd = {udp_health_addr}
         });
     }
