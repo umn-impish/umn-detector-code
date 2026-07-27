@@ -93,7 +93,12 @@ void DetectorService::handle_command(dm::Initialize) {
 }
 
 void DetectorService::reconnect_detectors() {
-    // HaFX detectors (scintillators)
+    // Determine if we need to automatically restart science mode
+    bool restart_exact = (hafx_nrl_list_timer != nullptr);
+    bool restart_impress = !restart_exact && (nominal_timer != nullptr);
+    bool restart_health = (health_timer != nullptr);
+
+    // Clear the scintillator control map (release resources)
     hafx_ctrl.clear();
 
     auto bridgeport_device_manager = std::make_shared<SipmUsb::BridgeportDeviceManager>();
@@ -122,6 +127,39 @@ void DetectorService::reconnect_detectors() {
     // release the resource before re-making it
     x123_ctrl.reset();
     x123_ctrl = std::make_unique<Detector::X123Control>(x123_ports);
+
+    // Auto-restart some of the periodic data.
+    // We delete the timers by setting them to nullptr in each `if` statement
+    // in order to clear any old timing information that might still exist.
+    if (restart_health) {
+        health_timer = nullptr;
+
+        // Hack: get the address we want to send data to
+        sockaddr_in udp_health_addr;
+        std::memset(&udp_health_addr, 0, sizeof(sockaddr_in));
+        auto port = static_cast<uint16_t>(
+            std::atoi(std::getenv("DET_HEALTH_PORT"))
+        );
+        udp_health_addr.sin_family = AF_INET;
+        udp_health_addr.sin_port = htons(port);
+        inet_aton("127.0.0.1", &udp_health_addr.sin_addr);
+
+        constexpr uint32_t HEALTH_CADENCE_SEC = 10;
+        push_message(DetectorMessages::StartPeriodicHealth{
+            .sec_between = HEALTH_CADENCE_SEC,
+            .fwd = {udp_health_addr}
+        });
+    }
+
+    if (restart_exact) {
+        hafx_nrl_list_timer = nullptr;
+        push_message(DetectorMessages::StartNrlList{ .started = false });
+    }
+
+    if (restart_impress) {
+        nominal_timer = nullptr;
+        push_message(DetectorMessages::CollectNominal{ .started = false });
+    }
 }
 
 void DetectorService::initialize() {
